@@ -1,13 +1,12 @@
-/* =========================================================
+/* =========================================
    DEAR, SOMEONE.
-   Anonymous Confession Wall
-   Supabase Edition
-   ========================================================= */
+   MAIN JAVASCRIPT
+========================================= */
 
 
-/* =========================================================
+/* =========================================
    SUPABASE CONFIG
-========================================================= */
+========================================= */
 
 const SUPABASE_URL =
     "https://pjodyqougqjoedyexkue.supabase.co";
@@ -16,44 +15,48 @@ const SUPABASE_PUBLISHABLE_KEY =
     "sb_publishable_JYYQcjpe_hNI85P22XgnRQ_J6A-FgjF";
 
 
-/* =========================================================
-   SUPABASE CLIENT
-========================================================= */
-
-let supabaseClient = null;
-
-if (window.supabase) {
-    supabaseClient = window.supabase.createClient(
+const supabaseClient =
+    window.supabase.createClient(
         SUPABASE_URL,
         SUPABASE_PUBLISHABLE_KEY
     );
-} else {
-    console.error(
-        "Supabase library tidak ditemukan."
-    );
-}
 
 
-/* =========================================================
-   CONFIG
-========================================================= */
+/* =========================================
+   ADMIN CONTACT
+========================================= */
 
-const MAX_LENGTH = 1000;
+/*
+    GANTI NOMOR INI DENGAN NOMOR WHATSAPP ADMIN.
+
+    Format:
+    628xxxxxxxxxx
+
+    Jangan gunakan:
+    +62
+    08xxxxxxxxxx
+    spasi
+    tanda -
+*/
+
+const ADMIN_WHATSAPP =
+    "6281957231265";
 
 
-/* =========================================================
-   STATE
-========================================================= */
+/* =========================================
+   GLOBAL STATE
+========================================= */
 
 let confessions = [];
+
 let currentConfession = null;
 
+let isLoadingConfessions = false;
 
-/* =========================================================
+
+/* =========================================
    DOM ELEMENTS
-========================================================= */
-
-/* General */
+========================================= */
 
 const pageLoader =
     document.getElementById("pageLoader");
@@ -67,12 +70,6 @@ const mobileMenuButton =
 const mobileMenu =
     document.getElementById("mobileMenu");
 
-const navLinks =
-    document.querySelectorAll("[data-page]");
-
-const mobileNavLinks =
-    document.querySelectorAll(".mobile-nav-link");
-
 
 /* Home */
 
@@ -84,6 +81,9 @@ const tonightNumber =
 
 const tonightDate =
     document.getElementById("tonightDate");
+
+const tonightContent =
+    document.getElementById("tonightContent");
 
 const tonightButton =
     document.getElementById("tonightButton");
@@ -101,7 +101,7 @@ const characterCount =
     document.getElementById("characterCount");
 
 
-/* Seal Overlay */
+/* Seal */
 
 const sealOverlay =
     document.getElementById("sealOverlay");
@@ -122,6 +122,39 @@ const readAfterSealButton =
     document.getElementById("readAfterSealButton");
 
 
+/* Share */
+
+const shareOverlay =
+    document.getElementById("shareOverlay");
+
+const closeShareOverlay =
+    document.getElementById("closeShareOverlay");
+
+const shareForm =
+    document.getElementById("shareForm");
+
+const sharePlatform =
+    document.getElementById("sharePlatform");
+
+const shareRecipient =
+    document.getElementById("shareRecipient");
+
+const shareNote =
+    document.getElementById("shareNote");
+
+const sharePreviewContent =
+    document.getElementById("sharePreviewContent");
+
+
+/* Share success */
+
+const shareSuccessOverlay =
+    document.getElementById("shareSuccessOverlay");
+
+const closeShareSuccess =
+    document.getElementById("closeShareSuccess");
+
+
 /* Read */
 
 const readingContent =
@@ -140,63 +173,67 @@ const currentYear =
     document.getElementById("currentYear");
 
 
-/* =========================================================
+/* =========================================
    INITIALIZATION
-========================================================= */
+========================================= */
 
 document.addEventListener(
     "DOMContentLoaded",
-    initializeSite
+    initialize
 );
 
 
-async function initializeSite() {
+async function initialize() {
 
-    setupLoader();
     setupNavigation();
+
     setupMobileMenu();
-    setupNavbarScroll();
 
     setupCharacterCounter();
+
     setupConfessionForm();
 
     setupSealOverlay();
-    setupTonightConfession();
-    setupReading();
 
-    setupRevealAnimations();
-    setupKeyboardShortcuts();
-    setupFooterYear();
+    setupShareForm();
+
+    setupReadPage();
+
     setupPaperInteraction();
 
-    /*
-     * Ambil confess dari database
-     * saat website dibuka.
-     */
+    setupKeyboardShortcut();
+
+    setupFooter();
+
+    setupScrollNavbar();
+
     await loadConfessions();
 
-    /*
-     * Setelah data selesai dimuat,
-     * tampilkan konten yang sesuai.
-     */
-    showTonightConfession();
-    showRandomConfession();
+    initializePageFromHash();
+
+    revealElements();
+
+    setTimeout(() => {
+
+        if (pageLoader) {
+            pageLoader.classList.add("loaded");
+        }
+
+    }, 500);
 }
 
 
-/* =========================================================
-   DATABASE
-========================================================= */
+/* =========================================
+   LOAD CONFESSIONS
+========================================= */
 
-/**
- * Mengambil semua confess dari Supabase.
- */
 async function loadConfessions() {
 
-    if (!supabaseClient) {
-        showDatabaseError();
+    if (isLoadingConfessions) {
         return;
     }
+
+    isLoadingConfessions = true;
 
     try {
 
@@ -228,269 +265,204 @@ async function loadConfessions() {
                 : [];
 
 
-        console.log(
-            `DEAR, SOMEONE.: ${confessions.length} confess loaded.`
-        );
+        updateTonightFess();
+
+        showRandomConfession();
 
 
     } catch (error) {
 
         console.error(
-            "Gagal mengambil confess:",
+            "Failed to load confessions:",
             error
         );
+
 
         confessions = [];
 
-        showDatabaseError();
-    }
-}
 
+        if (tonightContent) {
 
-/**
- * Mengirim confess baru ke Supabase.
- */
-async function saveConfession(content) {
+            tonightContent.textContent =
+                "The words are quiet right now. Try again later.";
 
-    if (!supabaseClient) {
-        return null;
-    }
-
-    try {
-
-        const {
-            data,
-            error
-        } = await supabaseClient
-            .from("confessions")
-            .insert({
-                content: content
-            })
-            .select(
-                "id, content, created_at"
-            )
-            .single();
-
-
-        if (error) {
-            throw error;
         }
 
+    } finally {
 
-        return data;
+        isLoadingConfessions = false;
 
-
-    } catch (error) {
-
-        console.error(
-            "Gagal menyimpan confess:",
-            error
-        );
-
-        return null;
     }
 }
 
 
-/* =========================================================
-   DATABASE ERROR
-========================================================= */
+/* =========================================
+   INSERT CONFESSION
+========================================= */
 
-function showDatabaseError() {
+async function insertConfession(content) {
 
-    if (tonightLetter) {
+    const {
+        data,
+        error
+    } = await supabaseClient
+        .from("confessions")
+        .insert({
+            content: content
+        })
+        .select(
+            "id, content, created_at"
+        )
+        .single();
 
-        tonightLetter.textContent =
-            "Confess belum dapat dimuat sekarang. Coba buka kembali website beberapa saat lagi.";
 
-        tonightNumber.textContent =
-            "—";
-
-        tonightDate.textContent =
-            "connection error";
+    if (error) {
+        throw error;
     }
 
 
-    if (readingContent) {
-
-        readingContent.textContent =
-            "Confess belum dapat dimuat sekarang.\n\nCoba buka kembali website beberapa saat lagi.";
-
-        readingNumber.textContent =
-            "—";
-    }
+    return data;
 }
 
 
-/* =========================================================
-   LOADER
-========================================================= */
-
-function setupLoader() {
-
-    window.addEventListener(
-        "load",
-        () => {
-
-            setTimeout(
-                () => {
-                    pageLoader?.classList.add(
-                        "hidden"
-                    );
-                },
-                500
-            );
-        }
-    );
-
-
-    /*
-     * Fallback apabila load event
-     * tidak berjalan seperti yang diharapkan.
-     */
-    setTimeout(
-        () => {
-
-            pageLoader?.classList.add(
-                "hidden"
-            );
-
-        },
-        2500
-    );
-}
-
-
-/* =========================================================
+/* =========================================
    NAVIGATION
-========================================================= */
+========================================= */
 
 function setupNavigation() {
 
-    navLinks.forEach(
-        (link) => {
-
-            link.addEventListener(
-                "click",
-                (event) => {
-
-                    const targetId =
-                        link.getAttribute(
-                            "href"
-                        );
+    const pageLinks =
+        document.querySelectorAll(
+            "[data-page]"
+        );
 
 
-                    if (
-                        !targetId ||
-                        !targetId.startsWith("#")
-                    ) {
-                        return;
-                    }
+    pageLinks.forEach(link => {
+
+        link.addEventListener(
+            "click",
+            event => {
+
+                event.preventDefault();
+
+                const page =
+                    link.dataset.page;
+
+                navigateToPage(page);
+
+            }
+        );
+
+    });
+
+}
 
 
-                    const target =
-                        document.querySelector(
-                            targetId
-                        );
-
-
-                    if (!target) {
-                        return;
-                    }
-
-
-                    event.preventDefault();
-
-                    closeMobileMenu();
-
-
-                    target.scrollIntoView({
-                        behavior: "smooth",
-                        block: "start"
-                    });
-                }
-            );
-        }
-    );
-
-
-    /*
-     * Active navigation ketika
-     * section sedang terlihat.
-     */
+function navigateToPage(page) {
 
     const sections =
         document.querySelectorAll(
-            ".page-section[id]"
+            ".page-section"
         );
 
 
-    const observer =
-        new IntersectionObserver(
-            (entries) => {
+    sections.forEach(section => {
 
-                entries.forEach(
-                    (entry) => {
-
-                        if (
-                            !entry.isIntersecting
-                        ) {
-                            return;
-                        }
-
-
-                        updateActiveNavigation(
-                            entry.target.id
-                        );
-                    }
-                );
-
-            },
-            {
-                threshold: 0.25,
-                rootMargin:
-                    "-10% 0px -55% 0px"
-            }
+        section.classList.remove(
+            "active-section"
         );
 
+    });
 
-    sections.forEach(
-        (section) => {
-            observer.observe(
-                section
-            );
-        }
+
+    const target =
+        document.getElementById(page);
+
+
+    if (!target) {
+        return;
+    }
+
+
+    target.classList.add(
+        "active-section"
     );
-}
 
 
-function updateActiveNavigation(
-    sectionId
-) {
-
-    document
-        .querySelectorAll("[data-page]")
-        .forEach(
-            (link) => {
-
-                const page =
-                    link.getAttribute(
-                        "data-page"
-                    );
-
-
-                link.classList.toggle(
-                    "active",
-                    page === sectionId
-                );
-            }
+    const links =
+        document.querySelectorAll(
+            ".nav-link"
         );
+
+
+    links.forEach(link => {
+
+        link.classList.toggle(
+            "active",
+            link.dataset.page === page
+        );
+
+    });
+
+
+    closeMobileMenu();
+
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+
+
+    if (page === "read") {
+
+        if (!currentConfession) {
+            showRandomConfession();
+        }
+
+    }
+
+
+    revealElements();
+
 }
 
 
-/* =========================================================
+function initializePageFromHash() {
+
+    const hash =
+        window.location.hash
+            .replace("#", "")
+            .trim();
+
+
+    const validPages = [
+        "home",
+        "write",
+        "read",
+        "about"
+    ];
+
+
+    if (
+        hash &&
+        validPages.includes(hash)
+    ) {
+
+        navigateToPage(hash);
+
+    } else {
+
+        navigateToPage("home");
+
+    }
+
+}
+
+
+/* =========================================
    MOBILE MENU
-========================================================= */
+========================================= */
 
 function setupMobileMenu() {
 
@@ -504,146 +476,60 @@ function setupMobileMenu() {
         () => {
 
             const isOpen =
-                mobileMenu?.classList.toggle(
+                mobileMenuButton.classList.toggle(
                     "open"
                 );
 
 
-            mobileMenuButton.classList.toggle(
+            mobileMenu.classList.toggle(
                 "open",
-                Boolean(isOpen)
+                isOpen
             );
 
 
             mobileMenuButton.setAttribute(
                 "aria-expanded",
-                String(Boolean(isOpen))
+                String(isOpen)
             );
 
-
-            document.body.classList.toggle(
-                "menu-open",
-                Boolean(isOpen)
-            );
         }
     );
 
-
-    mobileNavLinks.forEach(
-        (link) => {
-
-            link.addEventListener(
-                "click",
-                closeMobileMenu
-            );
-        }
-    );
-
-
-    /*
-     * Klik di luar mobile menu
-     * akan menutup menu.
-     */
-
-    document.addEventListener(
-        "click",
-        (event) => {
-
-            if (
-                !mobileMenu?.classList.contains(
-                    "open"
-                )
-            ) {
-                return;
-            }
-
-
-            const clickedInsideMenu =
-                mobileMenu.contains(
-                    event.target
-                );
-
-
-            const clickedButton =
-                mobileMenuButton.contains(
-                    event.target
-                );
-
-
-            if (
-                !clickedInsideMenu &&
-                !clickedButton
-            ) {
-
-                closeMobileMenu();
-            }
-        }
-    );
 }
 
 
 function closeMobileMenu() {
 
-    mobileMenu?.classList.remove(
+    if (!mobileMenuButton) {
+        return;
+    }
+
+
+    mobileMenuButton.classList.remove(
         "open"
     );
 
 
-    mobileMenuButton?.classList.remove(
+    mobileMenu.classList.remove(
         "open"
     );
 
 
-    mobileMenuButton?.setAttribute(
+    mobileMenuButton.setAttribute(
         "aria-expanded",
         "false"
     );
 
-
-    document.body.classList.remove(
-        "menu-open"
-    );
 }
 
 
-/* =========================================================
-   NAVBAR SCROLL
-========================================================= */
-
-function setupNavbarScroll() {
-
-    const handleScroll = () => {
-
-        navbar?.classList.toggle(
-            "scrolled",
-            window.scrollY > 35
-        );
-    };
-
-
-    handleScroll();
-
-
-    window.addEventListener(
-        "scroll",
-        handleScroll,
-        {
-            passive: true
-        }
-    );
-}
-
-
-/* =========================================================
+/* =========================================
    CHARACTER COUNTER
-========================================================= */
+========================================= */
 
 function setupCharacterCounter() {
 
-    if (
-        !letterInput ||
-        !characterCount
-    ) {
+    if (!letterInput || !characterCount) {
         return;
     }
 
@@ -655,17 +541,10 @@ function setupCharacterCounter() {
 
 
         characterCount.textContent =
-            length;
+            `${length} / 1000`;
 
 
-        /*
-         * Peringatan visual saat
-         * mendekati batas maksimal.
-         */
-
-        if (
-            length >= MAX_LENGTH * 0.9
-        ) {
+        if (length >= 900) {
 
             characterCount.style.color =
                 "var(--burgundy)";
@@ -674,7 +553,9 @@ function setupCharacterCounter() {
 
             characterCount.style.color =
                 "";
+
         }
+
     }
 
 
@@ -685,12 +566,13 @@ function setupCharacterCounter() {
 
 
     updateCounter();
+
 }
 
 
-/* =========================================================
+/* =========================================
    CONFESSION FORM
-========================================================= */
+========================================= */
 
 function setupConfessionForm() {
 
@@ -701,336 +583,234 @@ function setupConfessionForm() {
 
     confessionForm.addEventListener(
         "submit",
-        async (event) => {
+        async event => {
 
             event.preventDefault();
 
-            await submitConfession();
-        }
-    );
-}
 
+            const content =
+                letterInput.value.trim();
 
-async function submitConfession() {
 
-    /*
-     * Ambil isi textarea.
-     */
+            if (!content) {
 
-    const content =
-        letterInput.value.trim();
+                letterInput.focus();
 
+                return;
 
-    /*
-     * Validasi kosong.
-     */
+            }
 
-    if (!content) {
 
-        showFormError();
+            if (content.length > 1000) {
 
-        return;
-    }
+                alert(
+                    "Your fess is too long. Maximum 1000 characters."
+                );
 
+                return;
 
-    /*
-     * Validasi panjang.
-     */
+            }
 
-    if (
-        content.length > MAX_LENGTH
-    ) {
 
-        showFormError();
-
-        return;
-    }
-
-
-    /*
-     * Tombol submit.
-     */
-
-    const submitButton =
-        confessionForm.querySelector(
-            ".seal-button"
-        );
-
-
-    setSubmitButtonLoading(
-        submitButton,
-        true
-    );
-
-
-    /*
-     * Kirim langsung ke database.
-     */
-
-    const newConfession =
-        await saveConfession(
-            content
-        );
-
-
-    setSubmitButtonLoading(
-        submitButton,
-        false
-    );
-
-
-    /*
-     * Kalau database gagal.
-     */
-
-    if (!newConfession) {
-
-        alert(
-            "Confess belum berhasil dititipkan. Periksa koneksi atau konfigurasi Supabase, lalu coba lagi."
-        );
-
-        return;
-    }
-
-
-    /*
-     * Tambahkan ke state saat ini.
-     *
-     * Ini BUKAN localStorage.
-     * Data permanennya tetap berada
-     * di Supabase.
-     */
-
-    confessions.unshift(
-        newConfession
-    );
-
-
-    currentConfession =
-        newConfession;
-
-
-    /*
-     * Tampilkan isi confess
-     * di envelope.
-     */
-
-    if (sealedPreview) {
-
-        sealedPreview.textContent =
-            content;
-    }
-
-
-    /*
-     * Buka overlay.
-     */
-
-    openSealOverlay();
-
-
-    /*
-     * Jalankan animasi envelope.
-     */
-
-    setTimeout(
-        () => {
-
-            envelope?.classList.add(
-                "open"
-            );
-
-
-            setTimeout(
-                () => {
-
-                    envelope?.classList.add(
-                        "delivered"
-                    );
-
-                },
-                650
-            );
-
-        },
-        180
-    );
-
-
-    /*
-     * Perbarui bagian home.
-     */
-
-    showTonightConfession();
-}
-
-
-function setSubmitButtonLoading(
-    button,
-    loading
-) {
-
-    if (!button) {
-        return;
-    }
-
-
-    button.disabled =
-        loading;
-
-
-    if (loading) {
-
-        button.dataset.originalText =
-            button.innerHTML;
-
-
-        button.innerHTML =
-            `
-                <span class="seal-button-icon">⋯</span>
-                <span>Menitipkan...</span>
-            `;
-
-    } else {
-
-        button.innerHTML =
-            button.dataset.originalText ||
-            `
-                <span class="seal-button-icon">✦</span>
-                <span>Titipkan Confess</span>
-                <span class="seal-button-arrow">→</span>
-            `;
-    }
-}
-
-
-function showFormError() {
-
-    confessionForm?.classList.remove(
-        "shake"
-    );
-
-
-    /*
-     * Memaksa reflow supaya animasi
-     * bisa dimainkan berulang kali.
-     */
-
-    void confessionForm?.offsetWidth;
-
-
-    confessionForm?.classList.add(
-        "shake"
-    );
-
-
-    letterInput?.focus();
-}
-
-
-/* =========================================================
-   SEAL OVERLAY
-========================================================= */
-
-function setupSealOverlay() {
-
-    /*
-     * Tombol X.
-     */
-
-    closeSealOverlay?.addEventListener(
-        "click",
-        closeSealOverlayAndReset
-    );
-
-
-    /*
-     * Kembali ke beranda.
-     */
-
-    keepLetterButton?.addEventListener(
-        "click",
-        () => {
-
-            closeSealOverlayAndReset();
-
-            scrollToSection(
-                "home"
-            );
-        }
-    );
-
-
-    /*
-     * Langsung ke confess yang baru
-     * saja dikirim.
-     */
-
-    readAfterSealButton?.addEventListener(
-        "click",
-        () => {
-
-            closeSealOverlayAndReset();
-
-            scrollToSection(
-                "read"
-            );
-
-
-            setTimeout(
-                () => {
-
-                    if (
-                        currentConfession
-                    ) {
-
-                        updateReadingUI(
-                            currentConfession
-                        );
-
-                    } else {
-
-                        showRandomConfession();
-                    }
-
-                },
-                450
-            );
-        }
-    );
-
-
-    /*
-     * Klik backdrop untuk menutup.
-     */
-
-    sealOverlay?.addEventListener(
-        "click",
-        (event) => {
-
-            const backdrop =
-                sealOverlay.querySelector(
-                    ".overlay-backdrop"
+            const submitButton =
+                confessionForm.querySelector(
+                    ".seal-button"
                 );
 
 
-            if (
-                event.target ===
-                backdrop
-            ) {
+            const originalText =
+                submitButton
+                    ? submitButton.textContent
+                    : "";
 
-                closeSealOverlayAndReset();
+
+            if (submitButton) {
+
+                submitButton.disabled = true;
+
+                submitButton.textContent =
+                    "Uploading...";
+
             }
+
+
+            try {
+
+                const newConfession =
+                    await insertConfession(
+                        content
+                    );
+
+
+                /*
+                    Add new confession
+                    to local in-memory list.
+                */
+
+                confessions.unshift(
+                    newConfession
+                );
+
+
+                currentConfession =
+                    newConfession;
+
+
+                letterInput.value = "";
+
+                updateCharacterCount();
+
+
+                showSealOverlay(
+                    newConfession
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    "Failed to upload fess:",
+                    error
+                );
+
+
+                alert(
+                    "Your fess couldn't be uploaded right now. Please try again."
+                );
+
+
+            } finally {
+
+                if (submitButton) {
+
+                    submitButton.disabled = false;
+
+                    submitButton.textContent =
+                        originalText ||
+                        "Upload This Fess";
+
+                }
+
+            }
+
         }
     );
+
 }
 
 
-function openSealOverlay() {
+/* =========================================
+   CHARACTER COUNT HELPER
+========================================= */
+
+function updateCharacterCount() {
+
+    if (!letterInput || !characterCount) {
+        return;
+    }
+
+
+    characterCount.textContent =
+        `${letterInput.value.length} / 1000`;
+
+}
+
+
+/* =========================================
+   SEAL OVERLAY
+========================================= */
+
+function setupSealOverlay() {
+
+    if (closeSealOverlay) {
+
+        closeSealOverlay.addEventListener(
+            "click",
+            closeSeal
+        );
+
+    }
+
+
+    if (keepLetterButton) {
+
+        keepLetterButton.addEventListener(
+            "click",
+            () => {
+
+                closeSeal();
+
+                navigateToPage("read");
+
+            }
+        );
+
+    }
+
+
+    if (readAfterSealButton) {
+
+        readAfterSealButton.addEventListener(
+            "click",
+            () => {
+
+                closeSeal();
+
+                openShareOverlay(
+                    currentConfession
+                );
+
+            }
+        );
+
+    }
+
+
+    if (sealOverlay) {
+
+        sealOverlay
+            .querySelector(
+                ".overlay-backdrop"
+            )
+            ?.addEventListener(
+                "click",
+                closeSeal
+            );
+
+    }
+
+}
+
+
+function showSealOverlay(confession) {
 
     if (!sealOverlay) {
         return;
     }
+
+
+    currentConfession =
+        confession;
+
+
+    if (sealedPreview) {
+
+        sealedPreview.innerHTML = `
+            <span class="preview-label">
+                YOUR FESS IS LIVE
+            </span>
+
+            <p>
+                Your words are now out there.
+            </p>
+        `;
+
+    }
+
+
+    envelope?.classList.remove(
+        "open"
+    );
 
 
     sealOverlay.classList.add(
@@ -1044,13 +824,22 @@ function openSealOverlay() {
     );
 
 
-    document.body.classList.add(
-        "menu-open"
-    );
+    document.body.style.overflow =
+        "hidden";
+
+
+    setTimeout(() => {
+
+        envelope?.classList.add(
+            "open"
+        );
+
+    }, 500);
+
 }
 
 
-function closeSealOverlayAndReset() {
+function closeSeal() {
 
     if (!sealOverlay) {
         return;
@@ -1068,163 +857,359 @@ function closeSealOverlayAndReset() {
     );
 
 
-    document.body.classList.remove(
-        "menu-open"
-    );
+    document.body.style.overflow =
+        "";
 
-
-    /*
-     * Reset envelope.
-     */
-
-    envelope?.classList.remove(
-        "open",
-        "delivered"
-    );
-
-
-    /*
-     * Reset form.
-     *
-     * currentConfession sengaja tidak
-     * dihapus agar tombol "Baca
-     * confess lain" tetap bisa
-     * menampilkan confess terakhir.
-     */
-
-    setTimeout(
-        () => {
-
-            confessionForm?.reset();
-
-
-            if (characterCount) {
-                characterCount.textContent =
-                    "0";
-            }
-
-
-            if (sealedPreview) {
-                sealedPreview.textContent =
-                    "";
-            }
-
-        },
-        350
-    );
 }
 
 
-/* =========================================================
-   CONFESS MALAM INI
-========================================================= */
+/* =========================================
+   SHARE OVERLAY
+========================================= */
 
-function setupTonightConfession() {
+function setupShareForm() {
 
-    tonightButton?.addEventListener(
-        "click",
-        () => {
-
-            scrollToSection(
-                "read"
-            );
-
-
-            setTimeout(
-                () => {
-
-                    showRandomConfession();
-
-                },
-                450
-            );
-        }
-    );
-}
-
-
-function showTonightConfession() {
-
-    if (!tonightLetter) {
+    if (!shareForm) {
         return;
     }
 
 
-    /*
-     * Database masih kosong.
-     */
+    if (closeShareOverlay) {
 
-    if (!confessions.length) {
+        closeShareOverlay.addEventListener(
+            "click",
+            closeShare
+        );
 
-        tonightLetter.textContent =
-            "Belum ada confess malam ini. Mungkin kamu bisa menjadi yang pertama.";
-
-        tonightNumber.textContent =
-            "—";
-
-        tonightDate.textContent =
-            "waiting for someone";
-
-        return;
     }
 
 
-    /*
-     * Ambil salah satu confess.
-     */
+    shareOverlay
+        ?.querySelector(
+            ".overlay-backdrop"
+        )
+        ?.addEventListener(
+            "click",
+            closeShare
+        );
 
-    const confession =
-        getRandomConfession();
+
+    shareForm.addEventListener(
+        "submit",
+        handleShareRequest
+    );
+
+
+    if (closeShareSuccess) {
+
+        closeShareSuccess.addEventListener(
+            "click",
+            () => {
+
+                closeShareSuccessOverlay();
+
+                navigateToPage("home");
+
+            }
+        );
+
+    }
+
+
+    shareSuccessOverlay
+        ?.querySelector(
+            ".overlay-backdrop"
+        )
+        ?.addEventListener(
+            "click",
+            closeShareSuccessOverlay
+        );
+
+}
+
+
+function openShareOverlay(confession) {
+
+    if (!shareOverlay) {
+        return;
+    }
 
 
     if (!confession) {
+
+        alert(
+            "Please upload a fess first."
+        );
+
+        return;
+
+    }
+
+
+    currentConfession =
+        confession;
+
+
+    if (sharePreviewContent) {
+
+        sharePreviewContent.textContent =
+            confession.content;
+
+    }
+
+
+    if (shareForm) {
+        shareForm.reset();
+    }
+
+
+    if (sharePreviewContent) {
+
+        sharePreviewContent.textContent =
+            confession.content;
+
+    }
+
+
+    shareOverlay.classList.add(
+        "active"
+    );
+
+
+    shareOverlay.setAttribute(
+        "aria-hidden",
+        "false"
+    );
+
+
+    document.body.style.overflow =
+        "hidden";
+
+}
+
+
+function closeShare() {
+
+    if (!shareOverlay) {
         return;
     }
 
 
-    tonightLetter.textContent =
-        confession.content;
-
-
-    tonightNumber.textContent =
-        formatConfessionNumber(
-            confession
-        );
-
-
-    tonightDate.textContent =
-        formatRelativeDate(
-            confession.created_at
-        );
-
-
-    animateLetterChange(
-        tonightLetter
+    shareOverlay.classList.remove(
+        "active"
     );
+
+
+    shareOverlay.setAttribute(
+        "aria-hidden",
+        "true"
+    );
+
+
+    document.body.style.overflow =
+        "";
+
 }
 
 
-/* =========================================================
-   READ CONFESSION
-========================================================= */
+/* =========================================
+   SHARE REQUEST
+========================================= */
 
-function setupReading() {
+async function handleShareRequest(event) {
 
-    nextLetterButton?.addEventListener(
-        "click",
-        () => {
-
-            if (!confessions.length) {
-
-                showEmptyReadingState();
-
-                return;
-            }
+    event.preventDefault();
 
 
-            showRandomConfession();
-        }
+    if (!currentConfession) {
+
+        alert(
+            "We couldn't find the fess you're trying to send."
+        );
+
+        return;
+
+    }
+
+
+    const platform =
+        sharePlatform.value.trim();
+
+
+    const recipient =
+        shareRecipient.value.trim();
+
+
+    const note =
+        shareNote.value.trim();
+
+
+    if (!platform) {
+
+        sharePlatform.focus();
+
+        return;
+
+    }
+
+
+    if (!recipient) {
+
+        shareRecipient.focus();
+
+        return;
+
+    }
+
+
+    /*
+        At this stage, we don't create
+        another Supabase table.
+
+        Instead, the website prepares
+        a WhatsApp message for the admin.
+    */
+
+
+    const fess =
+        currentConfession.content;
+
+
+    const confessionId =
+        currentConfession.id;
+
+
+    const message =
+`DEAR, SOMEONE. — SHARE REQUEST
+
+Fess ID:
+${confessionId}
+
+Fess:
+"${fess}"
+
+Recipient:
+${recipient}
+
+Platform:
+${platform}
+
+Note:
+${note || "-"}
+
+Please review and handle this request.`;
+
+
+    const encodedMessage =
+        encodeURIComponent(
+            message
+        );
+
+
+    const whatsappURL =
+        `https://wa.me/${ADMIN_WHATSAPP}?text=${encodedMessage}`;
+
+
+    /*
+        Open WhatsApp in a new tab.
+    */
+
+    window.open(
+        whatsappURL,
+        "_blank",
+        "noopener,noreferrer"
     );
+
+
+    closeShare();
+
+
+    setTimeout(() => {
+
+        openShareSuccessOverlay();
+
+    }, 250);
+
+}
+
+
+/* =========================================
+   SHARE SUCCESS
+========================================= */
+
+function openShareSuccessOverlay() {
+
+    if (!shareSuccessOverlay) {
+        return;
+    }
+
+
+    shareSuccessOverlay.classList.add(
+        "active"
+    );
+
+
+    shareSuccessOverlay.setAttribute(
+        "aria-hidden",
+        "false"
+    );
+
+
+    document.body.style.overflow =
+        "hidden";
+
+}
+
+
+function closeShareSuccessOverlay() {
+
+    if (!shareSuccessOverlay) {
+        return;
+    }
+
+
+    shareSuccessOverlay.classList.remove(
+        "active"
+    );
+
+
+    shareSuccessOverlay.setAttribute(
+        "aria-hidden",
+        "true"
+    );
+
+
+    document.body.style.overflow =
+        "";
+
+}
+
+
+/* =========================================
+   READ PAGE
+========================================= */
+
+function setupReadPage() {
+
+    if (nextLetterButton) {
+
+        nextLetterButton.addEventListener(
+            "click",
+            showRandomConfession
+        );
+
+    }
+
+
+    if (tonightButton) {
+
+        tonightButton.addEventListener(
+            "click",
+            showRandomConfession
+        );
+
+    }
+
 }
 
 
@@ -1235,224 +1220,206 @@ function showRandomConfession() {
     }
 
 
-    /*
-     * Database kosong.
-     */
+    if (
+        !confessions ||
+        confessions.length === 0
+    ) {
 
-    if (!confessions.length) {
+        const body =
+            readingContent.querySelector(
+                ".reading-body p"
+            );
 
-        showEmptyReadingState();
+
+        if (body) {
+
+            body.textContent =
+                "There are no fess to read yet.";
+
+        }
+
+
+        if (readingNumber) {
+
+            readingNumber.textContent =
+                "---";
+
+        }
+
 
         return;
+
     }
 
 
-    /*
-     * Pilih confess random.
-     */
-
-    const nextConfession =
-        getRandomConfession(
-            currentConfession?.id
-        );
+    let selected;
 
 
-    if (!nextConfession) {
+    if (confessions.length === 1) {
 
-        showEmptyReadingState();
+        selected =
+            confessions[0];
 
-        return;
+    } else {
+
+        const available =
+            confessions.filter(
+                confession =>
+                    !currentConfession ||
+                    confession.id !== currentConfession.id
+            );
+
+
+        selected =
+            available[
+                Math.floor(
+                    Math.random() *
+                    available.length
+                )
+            ];
+
     }
 
 
     currentConfession =
-        nextConfession;
+        selected;
 
 
-    updateReadingUI(
-        nextConfession
-    );
-}
+    const body =
+        readingContent.querySelector(
+            ".reading-body p"
+        );
 
 
-function showEmptyReadingState() {
-
-    readingContent.textContent =
-        "Belum ada confess yang bisa dibaca.\n\nJadilah seseorang pertama yang meninggalkan kata-kata di sini.";
-
-    readingNumber.textContent =
-        "—";
-
-
-    readingContent.classList.remove(
-        "fade-out-content"
-    );
-
-
-    readingContent.classList.add(
-        "fade-in-content"
-    );
-}
-
-
-function updateReadingUI(
-    confession
-) {
-
-    if (!readingContent) {
+    if (!body) {
         return;
     }
 
 
-    /*
-     * Fade out.
-     */
-
-    readingContent.classList.remove(
+    body.classList.remove(
         "fade-in-content"
     );
 
-    readingContent.classList.add(
-        "fade-out-content"
+
+    void body.offsetWidth;
+
+
+    body.classList.add(
+        "fade-in-content"
     );
 
 
-    setTimeout(
-        () => {
-
-            /*
-             * Tampilkan confess baru.
-             */
-
-            readingContent.textContent =
-                confession.content;
+    body.textContent =
+        selected.content;
 
 
-            readingNumber.textContent =
-                formatConfessionNumber(
-                    confession
-                );
+    if (readingNumber) {
 
-
-            /*
-             * Fade in.
-             */
-
-            readingContent.classList.remove(
-                "fade-out-content"
+        readingNumber.textContent =
+            getConfessionNumber(
+                selected
             );
 
+    }
 
-            void readingContent.offsetWidth;
-
-
-            readingContent.classList.add(
-                "fade-in-content"
-            );
-
-        },
-        180
-    );
 }
 
 
-/* =========================================================
-   RANDOM CONFESSION
-========================================================= */
+function updateTonightFess() {
 
-function getRandomConfession(
-    excludeId = null
-) {
-
-    if (!confessions.length) {
-        return null;
+    if (
+        !tonightContent ||
+        confessions.length === 0
+    ) {
+        return;
     }
 
 
-    /*
-     * Hindari menampilkan confess
-     * yang sama dua kali berturut-turut
-     * kalau masih ada pilihan lain.
-     */
-
-    let available =
-        confessions.filter(
-            (confession) =>
-                confession.id !==
-                excludeId
-        );
+    const selected =
+        confessions[0];
 
 
-    /*
-     * Kalau hanya ada satu confess,
-     * tetap gunakan confess tersebut.
-     */
+    if (tonightContent) {
 
-    if (!available.length) {
+        tonightContent.textContent =
+            selected.content;
 
-        available =
-            confessions;
     }
 
 
-    const randomIndex =
-        Math.floor(
-            Math.random() *
-            available.length
-        );
+    if (tonightNumber) {
+
+        tonightNumber.textContent =
+            getConfessionNumber(
+                selected
+            );
+
+    }
 
 
-    return available[
-        randomIndex
-    ];
+    if (tonightDate) {
+
+        tonightDate.textContent =
+            formatDate(
+                selected.created_at
+            );
+
+    }
+
 }
 
 
-/* =========================================================
+/* =========================================
    CONFESSION NUMBER
-========================================================= */
+========================================= */
 
-function formatConfessionNumber(
-    confession
-) {
+function getConfessionNumber(confession) {
+
+    if (!confession) {
+        return "---";
+    }
+
 
     /*
-     * State kita berisi data terbaru
-     * di posisi paling awal.
-     *
-     * Nomor di sini hanya identifier
-     * visual, bukan ID database.
-     */
+        Supabase UUIDs are not ideal
+        for a pretty public number.
+
+        For now we use the position
+        inside the loaded list.
+    */
 
     const index =
         confessions.findIndex(
-            (item) =>
-                item.id ===
-                confession.id
+            item =>
+                item.id === confession.id
         );
 
 
     if (index === -1) {
-        return "—";
+
+        return "---";
+
     }
 
 
-    return `#${String(
-        index + 1
-    ).padStart(3, "0")}`;
+    return String(
+        confessions.length - index
+    ).padStart(
+        3,
+        "0"
+    );
+
 }
 
 
-/* =========================================================
+/* =========================================
    DATE FORMAT
-========================================================= */
+========================================= */
 
-function formatRelativeDate(
-    dateString
-) {
+function formatDate(dateString) {
 
     if (!dateString) {
-        return "anonymous";
+        return "---";
     }
 
 
@@ -1466,235 +1433,129 @@ function formatRelativeDate(
         )
     ) {
 
-        return "anonymous";
-    }
+        return "---";
 
-
-    const now =
-        new Date();
-
-
-    const difference =
-        now.getTime() -
-        date.getTime();
-
-
-    const oneDay =
-        24 * 60 * 60 * 1000;
-
-
-    if (difference < oneDay) {
-        return "hari ini";
-    }
-
-
-    if (
-        difference <
-        oneDay * 2
-    ) {
-
-        return "kemarin";
     }
 
 
     return date.toLocaleDateString(
-        "id-ID",
+        "en-US",
         {
+            month: "short",
             day: "numeric",
-            month: "long",
             year: "numeric"
         }
     );
+
 }
 
 
-/* =========================================================
-   LETTER ANIMATION
-========================================================= */
+/* =========================================
+   PAPER INTERACTION
+========================================= */
 
-function animateLetterChange(
-    element
-) {
+function setupPaperInteraction() {
 
-    if (!element) {
-        return;
-    }
-
-
-    element.classList.remove(
-        "fade-in-content"
-    );
-
-
-    void element.offsetWidth;
-
-
-    element.classList.add(
-        "fade-in-content"
-    );
-}
-
-
-/* =========================================================
-   SCROLL HELPER
-========================================================= */
-
-function scrollToSection(
-    sectionId
-) {
-
-    const section =
-        document.getElementById(
-            sectionId
-        );
-
-
-    if (!section) {
-        return;
-    }
-
-
-    section.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-    });
-}
-
-
-/* =========================================================
-   REVEAL ANIMATION
-========================================================= */
-
-function setupRevealAnimations() {
-
-    const elements =
+    const papers =
         document.querySelectorAll(
-            ".reveal-element"
+            ".tonight-paper, .writing-paper, .reading-paper"
         );
 
 
-    if (!elements.length) {
-        return;
-    }
+    papers.forEach(paper => {
 
-
-    /*
-     * Pengguna yang memilih
-     * reduced motion tidak perlu
-     * menjalankan animasi.
-     */
-
-    if (
-        window.matchMedia &&
-        window.matchMedia(
-            "(prefers-reduced-motion: reduce)"
-        ).matches
-    ) {
-
-        elements.forEach(
-            (element) => {
-
-                element.classList.add(
-                    "revealed"
-                );
-            }
-        );
-
-        return;
-    }
-
-
-    const observer =
-        new IntersectionObserver(
-            (
-                entries,
-                observerInstance
-            ) => {
-
-                entries.forEach(
-                    (entry) => {
-
-                        if (
-                            !entry.isIntersecting
-                        ) {
-                            return;
-                        }
-
-
-                        entry.target.classList.add(
-                            "revealed"
-                        );
-
-
-                        observerInstance.unobserve(
-                            entry.target
-                        );
-                    }
-                );
-
-            },
-            {
-                threshold: 0.08,
-                rootMargin:
-                    "0px 0px -40px 0px"
-            }
-        );
-
-
-    elements.forEach(
-        (element) => {
-
-            observer.observe(
-                element
-            );
-        }
-    );
-}
-
-
-/* =========================================================
-   KEYBOARD SHORTCUTS
-========================================================= */
-
-function setupKeyboardShortcuts() {
-
-    document.addEventListener(
-        "keydown",
-        (event) => {
-
-            /*
-             * Escape
-             */
-
-            if (
-                event.key ===
-                "Escape"
-            ) {
+        paper.addEventListener(
+            "mousemove",
+            event => {
 
                 if (
-                    sealOverlay?.classList.contains(
-                        "active"
-                    )
+                    window.innerWidth <= 600
                 ) {
-
-                    closeSealOverlayAndReset();
+                    return;
                 }
 
 
-                closeMobileMenu();
+                const rect =
+                    paper.getBoundingClientRect();
+
+
+                const x =
+                    event.clientX -
+                    rect.left;
+
+
+                const y =
+                    event.clientY -
+                    rect.top;
+
+
+                const rotateX =
+                    ((y / rect.height) - 0.5) * -1.5;
+
+
+                const rotateY =
+                    ((x / rect.width) - 0.5) * 1.5;
+
+
+                paper.style.transform =
+                    `perspective(900px)
+                     rotateX(${rotateX}deg)
+                     rotateY(${rotateY}deg)`;
+
             }
+        );
 
 
-            /*
-             * Ctrl + Enter
-             * Cmd + Enter
-             */
+        paper.addEventListener(
+            "mouseleave",
+            () => {
+
+                if (
+                    paper.classList.contains(
+                        "tonight-paper"
+                    )
+                ) {
+
+                    paper.style.transform =
+                        "rotate(-0.35deg)";
+
+                } else if (
+                    paper.classList.contains(
+                        "writing-paper"
+                    )
+                ) {
+
+                    paper.style.transform =
+                        "rotate(0.25deg)";
+
+                } else {
+
+                    paper.style.transform =
+                        "rotate(0.2deg)";
+
+                }
+
+            }
+        );
+
+    });
+
+}
+
+
+/* =========================================
+   KEYBOARD SHORTCUT
+========================================= */
+
+function setupKeyboardShortcut() {
+
+    document.addEventListener(
+        "keydown",
+        event => {
 
             if (
-                (
-                    event.ctrlKey ||
-                    event.metaKey
-                ) &&
+                (event.ctrlKey ||
+                 event.metaKey) &&
                 event.key === "Enter"
             ) {
 
@@ -1705,19 +1566,120 @@ function setupKeyboardShortcuts() {
 
                     event.preventDefault();
 
-                    submitConfession();
+                    confessionForm?.requestSubmit();
+
                 }
+
             }
+
+
+            if (event.key === "Escape") {
+
+                closeSeal();
+
+                closeShare();
+
+                closeShareSuccessOverlay();
+
+                closeMobileMenu();
+
+            }
+
         }
     );
+
 }
 
 
-/* =========================================================
-   FOOTER YEAR
-========================================================= */
+/* =========================================
+   NAVBAR SCROLL
+========================================= */
 
-function setupFooterYear() {
+function setupScrollNavbar() {
+
+    function updateNavbar() {
+
+        if (!navbar) {
+            return;
+        }
+
+
+        navbar.classList.toggle(
+            "scrolled",
+            window.scrollY > 20
+        );
+
+    }
+
+
+    window.addEventListener(
+        "scroll",
+        updateNavbar,
+        {
+            passive: true
+        }
+    );
+
+
+    updateNavbar();
+
+}
+
+
+/* =========================================
+   REVEAL ELEMENTS
+========================================= */
+
+function revealElements() {
+
+    const elements =
+        document.querySelectorAll(
+            ".active-section .hero, " +
+            ".active-section .tonight-wrapper, " +
+            ".active-section .page-heading, " +
+            ".active-section .writing-paper, " +
+            ".active-section .read-header, " +
+            ".active-section .reading-container, " +
+            ".active-section .about-content"
+        );
+
+
+    elements.forEach(
+        (element, index) => {
+
+            element.classList.remove(
+                "reveal-element",
+                "revealed"
+            );
+
+
+            void element.offsetWidth;
+
+
+            element.classList.add(
+                "reveal-element"
+            );
+
+
+            setTimeout(() => {
+
+                element.classList.add(
+                    "revealed"
+                );
+
+            }, 80 + index * 70);
+
+        }
+    );
+
+}
+
+
+/* =========================================
+   FOOTER
+========================================= */
+
+function setupFooter() {
 
     if (!currentYear) {
         return;
@@ -1726,98 +1688,42 @@ function setupFooterYear() {
 
     currentYear.textContent =
         new Date().getFullYear();
+
 }
 
 
-/* =========================================================
-   PAPER INTERACTION
-========================================================= */
+/* =========================================
+   SHARE BUTTON FALLBACK
+========================================= */
 
-function setupPaperInteraction() {
+/*
+    Allows the share action to be
+    triggered from other parts of
+    the website in the future.
+*/
 
-    const formPaper =
-        document.querySelector(
-            ".form-paper"
+window.openShareThisFess =
+    function () {
+
+        openShareOverlay(
+            currentConfession
         );
 
+    };
 
-    if (!formPaper) {
-        return;
+
+/* =========================================
+   ERROR HANDLING
+========================================= */
+
+window.addEventListener(
+    "error",
+    event => {
+
+        console.error(
+            "DEAR, SOMEONE. error:",
+            event.error || event.message
+        );
+
     }
-
-
-    /*
-     * Sedikit efek 3D pada desktop.
-     */
-
-    formPaper.addEventListener(
-        "mousemove",
-        (event) => {
-
-            if (
-                window.innerWidth <= 900
-            ) {
-                return;
-            }
-
-
-            const rect =
-                formPaper.getBoundingClientRect();
-
-
-            const x =
-                event.clientX -
-                rect.left;
-
-
-            const y =
-                event.clientY -
-                rect.top;
-
-
-            const rotateY =
-                (
-                    (x / rect.width) -
-                    0.5
-                ) * 1.4;
-
-
-            const rotateX =
-                (
-                    (y / rect.height) -
-                    0.5
-                ) * -1.4;
-
-
-            formPaper.style.transform =
-                `perspective(1000px)
-                 rotateX(${rotateX}deg)
-                 rotateY(${rotateY}deg)
-                 translateY(-2px)`;
-        }
-    );
-
-
-    formPaper.addEventListener(
-        "mouseleave",
-        () => {
-
-            formPaper.style.transform =
-                "";
-        }
-    );
-}
-
-
-/* =========================================================
-   CONSOLE
-========================================================= */
-
-console.log(
-    "%cDEAR, SOMEONE.",
-    "font-family: Georgia, serif; font-size: 20px; font-weight: bold;"
-);
-
-console.log(
-    "anonymous by design."
 );
