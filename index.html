@@ -1,22 +1,26 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>DEAR, SOMEONE. — Anonymous Confessions</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <meta
         name="description"
-        content="DEAR, SOMEONE. adalah tempat anonim untuk menitipkan hal-hal yang tidak pernah sempat kamu katakan."
+        content="DEAR, SOMEONE. — A place for the things you never got to say."
     >
+
+    <title>DEAR, SOMEONE.</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
     <link
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap"
         rel="stylesheet"
     >
 
@@ -26,460 +30,419 @@
 
 <body>
 
-    <!-- =========================
+    <!-- =========================================
          PAGE LOADER
-    ========================== -->
-    <div class="page-loader" id="pageLoader">
-        <div class="loader-inner">
+    ========================================== -->
+
+    <div id="pageLoader" class="page-loader">
+        <div class="loader-content">
+            <span class="loader-title">DEAR, SOMEONE.</span>
             <span class="loader-line"></span>
-            <p>DEAR, SOMEONE.</p>
         </div>
     </div>
 
 
-    <!-- =========================
-         NAVBAR
-    ========================== -->
-    <header class="navbar" id="navbar">
-        <div class="nav-container">
+    <!-- =========================================
+         NAVIGATION
+    ========================================== -->
 
-            <a href="#home" class="brand" data-page="home">
-                <span class="brand-main">DEAR,</span>
-                <span class="brand-sub">SOMEONE.</span>
+    <header class="navbar" id="navbar">
+
+        <div class="nav-inner">
+
+            <a
+                href="#home"
+                class="nav-logo"
+                data-page="home"
+            >
+                DEAR, SOMEONE.
             </a>
 
-            <nav class="nav-menu" id="navMenu">
-                <a href="#home" data-page="home" class="nav-link active">
-                    Beranda
+            <nav class="nav-links">
+
+                <a
+                    href="#home"
+                    data-page="home"
+                    class="nav-link active"
+                >
+                    Home
                 </a>
 
-                <a href="#write" data-page="write" class="nav-link">
-                    Tulis
+                <a
+                    href="#write"
+                    data-page="write"
+                    class="nav-link"
+                >
+                    Write
                 </a>
 
-                <a href="#read" data-page="read" class="nav-link">
-                    Baca
+                <a
+                    href="#read"
+                    data-page="read"
+                    class="nav-link"
+                >
+                    Read
                 </a>
 
-                <a href="#about" data-page="about" class="nav-link">
-                    Tentang
+                <a
+                    href="#about"
+                    data-page="about"
+                    class="nav-link"
+                >
+                    About
                 </a>
+
             </nav>
+
+
+            <!-- Mobile menu button -->
 
             <button
                 class="mobile-menu-button"
                 id="mobileMenuButton"
                 type="button"
-                aria-label="Buka menu"
+                aria-label="Open menu"
                 aria-expanded="false"
             >
-                <span></span>
                 <span></span>
                 <span></span>
             </button>
 
         </div>
 
-        <!-- Mobile Menu -->
-        <div class="mobile-menu" id="mobileMenu">
 
-            <a href="#home" data-page="home" class="mobile-nav-link active">
-                Beranda
+        <!-- Mobile menu -->
+
+        <div
+            class="mobile-menu"
+            id="mobileMenu"
+        >
+
+            <a
+                href="#home"
+                data-page="home"
+                class="mobile-nav-link"
+            >
+                Home
             </a>
 
-            <a href="#write" data-page="write" class="mobile-nav-link">
-                Tulis
+            <a
+                href="#write"
+                data-page="write"
+                class="mobile-nav-link"
+            >
+                Write
             </a>
 
-            <a href="#read" data-page="read" class="mobile-nav-link">
-                Baca
+            <a
+                href="#read"
+                data-page="read"
+                class="mobile-nav-link"
+            >
+                Read
             </a>
 
-            <a href="#about" data-page="about" class="mobile-nav-link">
-                Tentang
+            <a
+                href="#about"
+                data-page="about"
+                class="mobile-nav-link"
+            >
+                About
             </a>
 
         </div>
+
     </header>
 
 
-    <!-- =========================
-         MAIN CONTENT
-    ========================== -->
+
     <main>
 
 
-        <!-- ==================================================
+        <!-- =========================================
              HOME
-        =================================================== -->
-        <section class="page-section home-page" id="home">
+        ========================================== -->
 
-            <div class="home-background-decoration decoration-one"></div>
-            <div class="home-background-decoration decoration-two"></div>
+        <section
+            id="home"
+            class="page-section active-section"
+        >
 
-            <div class="home-content">
+            <div class="hero">
 
-                <p class="eyebrow reveal-element">
-                    anonymous confession wall
-                </p>
+                <div class="hero-small-label">
+                    ANONYMOUSLY, FROM SOMEONE
+                </div>
 
-                <h1 class="hero-title reveal-element">
-                    DEAR,<br>
-                    <span>SOMEONE.</span>
+                <h1 class="hero-title">
+                    DEAR,
+                    <em>SOMEONE.</em>
                 </h1>
 
-                <p class="hero-tagline reveal-element">
-                    Untuk semua hal yang tidak pernah sempat kamu katakan.
+                <p class="hero-description">
+                    For all the things you never got to say.
                 </p>
 
-                <p class="hero-description reveal-element">
-                    Ada sesuatu yang ingin kamu sampaikan,
-                    tapi tidak pernah benar-benar tahu harus mengatakannya
-                    kepada siapa?
-                </p>
 
-                <div class="hero-actions reveal-element">
+                <div class="hero-actions">
 
-                    <a
-                        href="#write"
+                    <button
+                        type="button"
                         class="primary-button"
                         data-page="write"
                     >
-                        <span>Tulis Confess</span>
-                        <span class="button-arrow">→</span>
-                    </a>
+                        Write a Fess
+                    </button>
 
-                    <a
-                        href="#read"
+                    <button
+                        type="button"
                         class="secondary-button"
                         data-page="read"
                     >
-                        Baca Confess
-                    </a>
-
-                </div>
-
-                <div class="hero-note reveal-element">
-                    <span class="note-line"></span>
-                    <span>anonymous · no account · just words</span>
-                    <span class="note-line"></span>
-                </div>
-
-            </div>
-
-
-            <!-- Scroll Indicator -->
-            <div class="scroll-indicator">
-                <span class="scroll-text">scroll slowly</span>
-                <span class="scroll-line"></span>
-            </div>
-
-        </section>
-
-
-        <!-- ==================================================
-             CONFESS MALAM INI
-        =================================================== -->
-        <section class="tonight-section page-section">
-
-            <div class="section-container">
-
-                <div class="section-heading reveal-element">
-
-                    <p class="section-eyebrow">
-                        tonight
-                    </p>
-
-                    <h2>
-                        Confess Malam Ini
-                    </h2>
-
-                    <p>
-                        Satu confess anonim yang mungkin terasa familiar.
-                    </p>
-
-                </div>
-
-
-                <article class="tonight-card reveal-element">
-
-                    <div class="card-top">
-
-                        <span class="card-label">
-                            SOMEONE'S CONFESSION
-                        </span>
-
-                        <span
-                            class="card-number"
-                            id="tonightNumber"
-                        >
-                            —
-                        </span>
-
-                    </div>
-
-
-                    <div class="paper-corner"></div>
-
-                    <div class="tonight-letter-wrap">
-
-                        <p
-                            class="tonight-letter"
-                            id="tonightLetter"
-                        >
-                            Belum ada confess malam ini.
-                            Mungkin kamu bisa menjadi yang pertama.
-                        </p>
-
-                    </div>
-
-
-                    <div class="card-bottom">
-
-                        <span class="anonymous-signature">
-                            — anonymous
-                        </span>
-
-                        <span
-                            class="letter-date"
-                            id="tonightDate"
-                        >
-                            waiting for someone
-                        </span>
-
-                    </div>
-
-                </article>
-
-
-                <div class="tonight-action reveal-element">
-
-                    <button
-                        class="text-button"
-                        id="tonightButton"
-                        type="button"
-                    >
-                        <span>Baca confess lain</span>
-                        <span>↗</span>
+                        Read Fess
                     </button>
 
                 </div>
 
             </div>
 
-        </section>
 
 
-        <!-- ==================================================
-             WRITE CONFESSION
-        =================================================== -->
-        <section
-            class="page-section inner-page write-page"
-            id="write"
-        >
+            <!-- Tonight's letter -->
 
-            <div class="section-container">
+            <div class="tonight-wrapper">
 
-                <div class="page-intro reveal-element">
-
-                    <p class="section-eyebrow">
-                        leave something here
-                    </p>
-
-                    <h2>
-                        Dear, someone...
-                    </h2>
-
-                    <p>
-                        Tulis apa pun yang selama ini ingin kamu katakan.
-                        Tidak perlu nama. Tidak perlu penjelasan.
-                    </p>
-
+                <div class="section-label">
+                    TONIGHT'S FESS
                 </div>
 
+                <article
+                    class="tonight-paper"
+                    id="tonightLetter"
+                >
 
-                <div class="form-paper-wrap reveal-element">
+                    <div class="paper-top">
 
-                    <div class="paper-shadow"></div>
+                        <span>
+                            #<span id="tonightNumber">---</span>
+                        </span>
 
-                    <form
-                        class="form-paper"
-                        id="confessionForm"
-                    >
+                        <span id="tonightDate">
+                            ---
+                        </span>
 
-                        <div class="paper-header">
-
-                            <div class="paper-date">
-                                anonymous
-                            </div>
-
-                            <div class="private-stamp">
-                                ANONYMOUS
-                            </div>
-
-                        </div>
+                    </div>
 
 
-                        <div class="writing-area">
+                    <div class="paper-content">
 
-                            <label
-                                for="letterInput"
-                                class="writing-label"
-                            >
-                                dear, someone...
-                            </label>
+                        <p id="tonightContent">
+                            Someone's words are waiting here.
+                        </p>
 
-                            <textarea
-                                id="letterInput"
-                                name="confession"
-                                maxlength="1000"
-                                placeholder="Aku sebenarnya ingin bilang..."
-                                autocomplete="off"
-                                spellcheck="true"
-                                required
-                            ></textarea>
-
-                        </div>
+                    </div>
 
 
-                        <div class="writing-footer">
+                    <div class="paper-bottom">
 
-                            <div
-                                class="character-counter"
-                                aria-live="polite"
-                            >
-                                <span id="characterCount">0</span>
-                                <span>/ 1000</span>
-                            </div>
-
-                            <div class="writing-hint">
-                                your name stays out of it.
-                            </div>
-
-                        </div>
-
+                        <span>
+                            anonymous
+                        </span>
 
                         <button
-                            type="submit"
-                            class="seal-button"
+                            type="button"
+                            id="tonightButton"
+                            class="text-button"
                         >
-                            <span class="seal-button-icon">✦</span>
-                            <span>Titipkan Confess</span>
-                            <span class="seal-button-arrow">→</span>
+                            Read another →
                         </button>
 
-                    </form>
+                    </div>
 
-                </div>
-
-
-                <div class="write-note reveal-element">
-
-                    <span class="write-note-symbol">✎</span>
-
-                    <p>
-                        Confess yang kamu tulis akan dibagikan
-                        secara anonim agar bisa dibaca orang lain.
-                    </p>
-
-                </div>
+                </article>
 
             </div>
 
         </section>
 
 
-        <!-- ==================================================
-             SEAL / DELIVERY OVERLAY
-        =================================================== -->
+
+        <!-- =========================================
+             WRITE
+        ========================================== -->
+
+        <section
+            id="write"
+            class="page-section"
+        >
+
+            <div class="page-heading">
+
+                <span class="section-label">
+                    WRITE SOMETHING
+                </span>
+
+                <h2>
+                    Dear, someone...
+                </h2>
+
+                <p>
+                    Say whatever you've been keeping to yourself.
+                    No name required.
+                </p>
+
+            </div>
+
+
+
+            <div class="writing-paper">
+
+                <form
+                    id="confessionForm"
+                    autocomplete="off"
+                >
+
+                    <div class="form-meta">
+
+                        <span>
+                            DEAR, SOMEONE.
+                        </span>
+
+                        <span>
+                            ANONYMOUS
+                        </span>
+
+                    </div>
+
+
+                    <textarea
+                        id="letterInput"
+                        name="content"
+                        maxlength="1000"
+                        placeholder="Write what you never got to say..."
+                        aria-label="Write your fess"
+                        required
+                    ></textarea>
+
+
+                    <div class="writing-footer">
+
+                        <span id="characterCount">
+                            0 / 1000
+                        </span>
+
+                        <button
+                            type="submit"
+                            class="seal-button"
+                        >
+                            <span>Upload This Fess</span>
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+
+            <p class="writing-note">
+                Your fess will be shared anonymously so others can read it.
+            </p>
+
+        </section>
+
+
+
+        <!-- =========================================
+             FESS SUCCESS / SEAL OVERLAY
+        ========================================== -->
+
         <div
-            class="seal-overlay"
+            class="overlay"
             id="sealOverlay"
             aria-hidden="true"
         >
 
             <div class="overlay-backdrop"></div>
 
-            <div
-                class="seal-dialog"
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="sealTitle"
-            >
+            <div class="seal-modal">
 
                 <button
-                    class="overlay-close"
-                    id="closeSealOverlay"
                     type="button"
-                    aria-label="Tutup"
+                    class="close-overlay"
+                    id="closeSealOverlay"
+                    aria-label="Close"
                 >
                     ×
                 </button>
 
 
                 <!-- Envelope -->
-                <div class="envelope-scene">
 
-                    <div class="envelope" id="envelope">
+                <div
+                    class="envelope"
+                    id="envelope"
+                >
 
-                        <div class="envelope-back"></div>
+                    <div class="envelope-back"></div>
 
-                        <div class="envelope-paper">
+                    <div class="envelope-paper">
 
-                            <p
-                                class="sealed-preview"
-                                id="sealedPreview"
-                            ></p>
+                        <span>
+                            DEAR,
+                        </span>
 
-                        </div>
+                        <strong>
+                            SOMEONE.
+                        </strong>
 
-                        <div class="envelope-flap"></div>
+                    </div>
 
-                        <div class="wax-seal">
-                            <span>DS</span>
-                        </div>
+                    <div class="envelope-flap"></div>
 
+                    <div class="envelope-seal">
+                        DS
                     </div>
 
                 </div>
 
 
-                <div class="seal-message">
+                <!-- Preview -->
 
-                    <p class="seal-eyebrow">
-                        CONFESS DELIVERED
-                    </p>
+                <div
+                    class="sealed-preview"
+                    id="sealedPreview"
+                >
 
-                    <h3 id="sealTitle">
-                        Confess-mu sudah dititipkan.
-                    </h3>
+                    <span class="preview-label">
+                        YOUR FESS
+                    </span>
 
                     <p>
-                        Tidak ada nama.
-                        Tidak ada identitas.
-                        Hanya kata-kata yang akhirnya berhasil keluar.
+                        Your words are now out there.
                     </p>
 
                 </div>
 
 
+                <!-- Success actions -->
+
                 <div class="seal-actions">
 
                     <button
+                        type="button"
                         class="secondary-button"
                         id="keepLetterButton"
-                        type="button"
                     >
-                        Kembali ke beranda
+                        Read Fess
                     </button>
 
                     <button
+                        type="button"
                         class="primary-button"
                         id="readAfterSealButton"
-                        type="button"
                     >
-                        <span>Baca confess lain</span>
-                        <span class="button-arrow">→</span>
+                        Send This Fess
                     </button>
 
                 </div>
@@ -489,181 +452,330 @@
         </div>
 
 
-        <!-- ==================================================
-             READ CONFESS
-        =================================================== -->
-        <section
-            class="page-section inner-page read-page"
-            id="read"
+
+        <!-- =========================================
+             SEND THIS FESS MODAL
+        ========================================== -->
+
+        <div
+            class="overlay"
+            id="shareOverlay"
+            aria-hidden="true"
         >
 
-            <div class="read-background-decoration read-decoration-one"></div>
-            <div class="read-background-decoration read-decoration-two"></div>
+            <div class="overlay-backdrop"></div>
 
-            <div class="section-container read-container">
+            <div class="share-modal">
 
-                <div class="page-intro read-intro reveal-element">
+                <button
+                    type="button"
+                    class="close-overlay"
+                    id="closeShareOverlay"
+                    aria-label="Close"
+                >
+                    ×
+                </button>
 
-                    <p class="section-eyebrow">
-                        from someone
-                    </p>
+
+                <div class="share-heading">
+
+                    <span class="section-label">
+                        SEND THIS FESS
+                    </span>
 
                     <h2>
-                        Someone's Confession
+                        Want it to reach someone?
                     </h2>
 
                     <p>
-                        Kamu tidak tahu siapa yang menulisnya.
-                        Mungkin itu justru alasan kamu bisa merasa dekat.
+                        Tell us where you'd like this fess to be sent.
+                        We'll take it from here.
                     </p>
 
                 </div>
 
 
-                <div class="reading-stage reveal-element">
+                <form
+                    id="shareForm"
+                    autocomplete="off"
+                >
 
-                    <div class="reading-meta">
+                    <!-- Platform -->
 
-                        <span class="reading-label">
-                            ANONYMOUS CONFESSION
+                    <div class="form-field">
+
+                        <label for="sharePlatform">
+                            PLATFORM
+                        </label>
+
+                        <select
+                            id="sharePlatform"
+                            name="platform"
+                            required
+                        >
+
+                            <option value="">
+                                Choose a platform
+                            </option>
+
+                            <option value="Instagram">
+                                Instagram
+                            </option>
+
+                            <option value="WhatsApp">
+                                WhatsApp
+                            </option>
+
+                            <option value="TikTok">
+                                TikTok
+                            </option>
+
+                            <option value="Other">
+                                Other
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- Recipient -->
+
+                    <div class="form-field">
+
+                        <label for="shareRecipient">
+                            RECIPIENT
+                        </label>
+
+                        <input
+                            type="text"
+                            id="shareRecipient"
+                            name="recipient"
+                            placeholder="@username / phone number"
+                            maxlength="100"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- Optional note -->
+
+                    <div class="form-field">
+
+                        <label for="shareNote">
+                            NOTE
+                            <span>(OPTIONAL)</span>
+                        </label>
+
+                        <textarea
+                            id="shareNote"
+                            name="note"
+                            maxlength="300"
+                            placeholder="Anything the admin should know..."
+                        ></textarea>
+
+                    </div>
+
+
+                    <!-- Selected fess preview -->
+
+                    <div class="share-preview">
+
+                        <span>
+                            YOUR FESS
                         </span>
 
-                        <span
-                            class="reading-number"
-                            id="readingNumber"
-                        >
+                        <p id="sharePreviewContent">
                             —
+                        </p>
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        class="primary-button share-submit-button"
+                    >
+                        Send Request
+                    </button>
+
+
+                    <p class="share-disclaimer">
+                        Your recipient information is only used to process
+                        this delivery request.
+                    </p>
+
+                </form>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =========================================
+             SHARE SUCCESS MODAL
+        ========================================== -->
+
+        <div
+            class="overlay"
+            id="shareSuccessOverlay"
+            aria-hidden="true"
+        >
+
+            <div class="overlay-backdrop"></div>
+
+            <div class="share-success-modal">
+
+                <div class="success-symbol">
+                    ✓
+                </div>
+
+                <span class="section-label">
+                    REQUEST RECEIVED
+                </span>
+
+                <h2>
+                    We'll take it from here.
+                </h2>
+
+                <p>
+                    Your request has been sent to the admin.
+                    Your fess will be reviewed before being delivered.
+                </p>
+
+                <button
+                    type="button"
+                    class="primary-button"
+                    id="closeShareSuccess"
+                >
+                    Back to DEAR, SOMEONE.
+                </button>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =========================================
+             READ
+        ========================================== -->
+
+        <section
+            id="read"
+            class="page-section read-section"
+        >
+
+            <div class="read-header">
+
+                <span class="section-label">
+                    FROM SOMEONE, TO NO ONE
+                </span>
+
+                <h2>
+                    Someone's Confession
+                </h2>
+
+                <p>
+                    You don't know who wrote it.
+                    Maybe that's the point.
+                </p>
+
+            </div>
+
+
+            <div
+                class="reading-container"
+                id="readingContent"
+            >
+
+                <article class="reading-paper">
+
+                    <div class="reading-top">
+
+                        <span>
+                            #<span id="readingNumber">---</span>
+                        </span>
+
+                        <span>
+                            anonymous
                         </span>
 
                     </div>
 
 
-                    <article
-                        class="reading-card"
-                        id="readingCard"
-                    >
+                    <div class="reading-body">
 
-                        <div class="reading-paper-texture"></div>
+                        <p>
+                            Loading someone's words...
+                        </p>
 
-                        <div class="reading-content-wrap">
-
-                            <div
-                                class="reading-content"
-                                id="readingContent"
-                            >
-                                Belum ada confess yang bisa dibaca.
-
-                                Jadilah seseorang pertama yang
-                                meninggalkan kata-kata di sini.
-                            </div>
-
-                        </div>
+                    </div>
 
 
-                        <div class="reading-signature">
-                            — anonymous
-                        </div>
+                    <div class="reading-bottom">
 
-                    </article>
-
-
-                    <div class="reading-actions">
+                        <span>
+                            DEAR, SOMEONE.
+                        </span>
 
                         <button
-                            class="next-letter-button"
-                            id="nextLetterButton"
                             type="button"
+                            class="text-button"
+                            id="nextLetterButton"
                         >
-                            <span>✦</span>
-                            <span>Baca Confess Lain</span>
-                            <span>→</span>
+                            Another one →
                         </button>
 
                     </div>
 
-                </div>
-
-
-                <div class="read-footer-note reveal-element">
-
-                    <span class="note-line"></span>
-
-                    <p>
-                        mungkin seseorang di luar sana
-                        pernah merasakan hal yang sama.
-                    </p>
-
-                    <span class="note-line"></span>
-
-                </div>
+                </article>
 
             </div>
 
         </section>
 
 
-        <!-- ==================================================
+
+        <!-- =========================================
              ABOUT
-        =================================================== -->
+        ========================================== -->
+
         <section
-            class="page-section inner-page about-page"
             id="about"
+            class="page-section about-section"
         >
 
-            <div class="section-container">
+            <div class="about-content">
 
-                <div class="about-grid">
+                <span class="section-label">
+                    ABOUT THIS PLACE
+                </span>
 
-                    <div class="about-heading reveal-element">
+                <h2>
+                    Some things are easier
+                    to write than to say.
+                </h2>
 
-                        <p class="section-eyebrow">
-                            about
-                        </p>
+                <div class="about-text">
 
-                        <h2>
-                            Some things<br>
-                            are easier<br>
-                            to write.
-                        </h2>
+                    <p>
+                        DEAR, SOMEONE. is an anonymous space
+                        for words that were never said.
+                    </p>
 
-                    </div>
+                    <p>
+                        Maybe it's something you've been carrying
+                        for years. Maybe it's something you wanted
+                        to say yesterday.
+                    </p>
 
-
-                    <div class="about-copy reveal-element">
-
-                        <p class="about-lead">
-                            DEAR, SOMEONE. adalah tempat anonim
-                            untuk menitipkan kata-kata yang tidak pernah
-                            sempat disampaikan.
-                        </p>
-
-                        <p>
-                            Tidak perlu nama.
-                            Tidak perlu menjelaskan siapa kamu.
-                            Tidak perlu tahu siapa yang akan membacanya.
-                        </p>
-
-                        <p>
-                            Tulis saja.
-                        </p>
-
-                        <p>
-                            Mungkin orang yang kamu tuju tidak akan pernah
-                            menemukan confess itu.
-                            Tapi mungkin seseorang yang lain akan membacanya
-                            dan menyadari bahwa mereka tidak sendirian.
-                        </p>
-
-
-                        <div class="about-divider"></div>
-
-
-                        <div class="about-signature">
-                            <span>dear, someone.</span>
-                            <span>anonymous, always.</span>
-                        </div>
-
-                    </div>
+                    <p>
+                        Write it down. Leave it here.
+                        Someone might read it someday.
+                    </p>
 
                 </div>
 
@@ -674,35 +786,25 @@
     </main>
 
 
-    <!-- =========================
+
+    <!-- =========================================
          FOOTER
-    ========================== -->
+    ========================================== -->
+
     <footer class="site-footer">
 
-        <div class="footer-container">
+        <div class="footer-inner">
 
-            <div class="footer-brand">
-
-                <span class="footer-title">
-                    DEAR, SOMEONE.
-                </span>
-
-                <span class="footer-subtitle">
-                    for the words you couldn't say.
-                </span>
-
+            <div class="footer-logo">
+                DEAR, SOMEONE.
             </div>
 
-
-            <div class="footer-center">
-                <span>anonymous by design.</span>
+            <div class="footer-note">
+                For the things left unsaid.
             </div>
 
-
-            <div class="footer-right">
-                <span>
-                    © <span id="currentYear"></span>
-                </span>
+            <div class="footer-year">
+                © <span id="currentYear"></span>
             </div>
 
         </div>
@@ -710,9 +812,10 @@
     </footer>
 
 
-    <!-- ==================================================
+
+    <!-- =========================================
          SUPABASE
-    =================================================== -->
+    ========================================== -->
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
