@@ -1,11 +1,49 @@
 /* =========================================================
    DEAR, SOMEONE.
    Anonymous Confession Wall
-   No Default Confessions
+   Supabase Edition
    ========================================================= */
 
-const STORAGE_KEY = "dearSomeoneConfessions";
+
+/* =========================================================
+   SUPABASE CONFIG
+========================================================= */
+
+const SUPABASE_URL =
+    "https://pjodyqougqjoedyexkue.supabase.co";
+
+const SUPABASE_PUBLISHABLE_KEY =
+    "sb_publishable_JYYQcjpe_hNI85P22XgnRQ_J6A-FgjF";
+
+
+/* =========================================================
+   SUPABASE CLIENT
+========================================================= */
+
+let supabaseClient = null;
+
+if (window.supabase) {
+    supabaseClient = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_PUBLISHABLE_KEY
+    );
+} else {
+    console.error(
+        "Supabase library tidak ditemukan."
+    );
+}
+
+
+/* =========================================================
+   CONFIG
+========================================================= */
+
 const MAX_LENGTH = 1000;
+
+
+/* =========================================================
+   STATE
+========================================================= */
 
 let confessions = [];
 let currentConfession = null;
@@ -15,9 +53,13 @@ let currentConfession = null;
    DOM ELEMENTS
 ========================================================= */
 
-const pageLoader = document.getElementById("pageLoader");
+/* General */
 
-const navbar = document.getElementById("navbar");
+const pageLoader =
+    document.getElementById("pageLoader");
+
+const navbar =
+    document.getElementById("navbar");
 
 const mobileMenuButton =
     document.getElementById("mobileMenuButton");
@@ -59,7 +101,7 @@ const characterCount =
     document.getElementById("characterCount");
 
 
-/* Overlay */
+/* Seal Overlay */
 
 const sealOverlay =
     document.getElementById("sealOverlay");
@@ -102,120 +144,181 @@ const currentYear =
    INITIALIZATION
 ========================================================= */
 
-document.addEventListener("DOMContentLoaded", () => {
-    initializeSite();
-});
+document.addEventListener(
+    "DOMContentLoaded",
+    initializeSite
+);
 
 
-function initializeSite() {
-    loadConfessions();
+async function initializeSite() {
 
     setupLoader();
     setupNavigation();
     setupMobileMenu();
     setupNavbarScroll();
+
     setupCharacterCounter();
     setupConfessionForm();
+
     setupSealOverlay();
     setupTonightConfession();
     setupReading();
+
     setupRevealAnimations();
     setupKeyboardShortcuts();
     setupFooterYear();
     setupPaperInteraction();
 
+    /*
+     * Ambil confess dari database
+     * saat website dibuka.
+     */
+    await loadConfessions();
+
+    /*
+     * Setelah data selesai dimuat,
+     * tampilkan konten yang sesuai.
+     */
     showTonightConfession();
     showRandomConfession();
 }
 
 
 /* =========================================================
-   STORAGE
+   DATABASE
 ========================================================= */
 
-function loadConfessions() {
-    confessions = getStoredConfessions();
-}
+/**
+ * Mengambil semua confess dari Supabase.
+ */
+async function loadConfessions() {
 
+    if (!supabaseClient) {
+        showDatabaseError();
+        return;
+    }
 
-function getStoredConfessions() {
     try {
-        const rawData =
-            localStorage.getItem(STORAGE_KEY);
 
-        if (!rawData) {
-            return [];
+        const {
+            data,
+            error
+        } = await supabaseClient
+            .from("confessions")
+            .select(
+                "id, content, created_at"
+            )
+            .order(
+                "created_at",
+                {
+                    ascending: false
+                }
+            )
+            .limit(500);
+
+
+        if (error) {
+            throw error;
         }
 
-        const parsedData =
-            JSON.parse(rawData);
 
-        if (!Array.isArray(parsedData)) {
-            return [];
-        }
+        confessions =
+            Array.isArray(data)
+                ? data
+                : [];
 
-        return parsedData.filter(isValidConfession);
+
+        console.log(
+            `DEAR, SOMEONE.: ${confessions.length} confess loaded.`
+        );
+
 
     } catch (error) {
+
         console.error(
-            "Gagal membaca confess:",
+            "Gagal mengambil confess:",
             error
         );
 
-        return [];
+        confessions = [];
+
+        showDatabaseError();
     }
 }
 
 
-function isValidConfession(confession) {
-    return (
-        confession &&
-        typeof confession === "object" &&
-        typeof confession.content === "string" &&
-        confession.content.trim().length > 0
-    );
-}
+/**
+ * Mengirim confess baru ke Supabase.
+ */
+async function saveConfession(content) {
 
+    if (!supabaseClient) {
+        return null;
+    }
 
-function saveConfession(confession) {
     try {
-        const stored =
-            getStoredConfessions();
 
-        stored.push(confession);
+        const {
+            data,
+            error
+        } = await supabaseClient
+            .from("confessions")
+            .insert({
+                content: content
+            })
+            .select(
+                "id, content, created_at"
+            )
+            .single();
 
-        localStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify(stored)
-        );
 
-        return true;
+        if (error) {
+            throw error;
+        }
+
+
+        return data;
+
 
     } catch (error) {
+
         console.error(
             "Gagal menyimpan confess:",
             error
         );
 
-        return false;
+        return null;
     }
 }
 
 
 /* =========================================================
-   ID
+   DATABASE ERROR
 ========================================================= */
 
-function generateConfessionId() {
-    const timestamp =
-        Date.now().toString(36);
+function showDatabaseError() {
 
-    const random =
-        Math.random()
-            .toString(36)
-            .slice(2, 8);
+    if (tonightLetter) {
 
-    return `${timestamp}-${random}`;
+        tonightLetter.textContent =
+            "Confess belum dapat dimuat sekarang. Coba buka kembali website beberapa saat lagi.";
+
+        tonightNumber.textContent =
+            "—";
+
+        tonightDate.textContent =
+            "connection error";
+    }
+
+
+    if (readingContent) {
+
+        readingContent.textContent =
+            "Confess belum dapat dimuat sekarang.\n\nCoba buka kembali website beberapa saat lagi.";
+
+        readingNumber.textContent =
+            "—";
+    }
 }
 
 
@@ -224,15 +327,37 @@ function generateConfessionId() {
 ========================================================= */
 
 function setupLoader() {
-    window.addEventListener("load", () => {
-        setTimeout(() => {
-            pageLoader?.classList.add("hidden");
-        }, 600);
-    });
 
-    setTimeout(() => {
-        pageLoader?.classList.add("hidden");
-    }, 1800);
+    window.addEventListener(
+        "load",
+        () => {
+
+            setTimeout(
+                () => {
+                    pageLoader?.classList.add(
+                        "hidden"
+                    );
+                },
+                500
+            );
+        }
+    );
+
+
+    /*
+     * Fallback apabila load event
+     * tidak berjalan seperti yang diharapkan.
+     */
+    setTimeout(
+        () => {
+
+            pageLoader?.classList.add(
+                "hidden"
+            );
+
+        },
+        2500
+    );
 }
 
 
@@ -241,84 +366,125 @@ function setupLoader() {
 ========================================================= */
 
 function setupNavigation() {
-    navLinks.forEach((link) => {
-        link.addEventListener("click", (event) => {
 
-            const targetId =
-                link.getAttribute("href");
+    navLinks.forEach(
+        (link) => {
 
-            if (
-                !targetId ||
-                !targetId.startsWith("#")
-            ) {
-                return;
-            }
+            link.addEventListener(
+                "click",
+                (event) => {
 
-            const target =
-                document.querySelector(targetId);
+                    const targetId =
+                        link.getAttribute(
+                            "href"
+                        );
 
-            if (!target) {
-                return;
-            }
 
-            event.preventDefault();
+                    if (
+                        !targetId ||
+                        !targetId.startsWith("#")
+                    ) {
+                        return;
+                    }
 
-            closeMobileMenu();
 
-            target.scrollIntoView({
-                behavior: "smooth",
-                block: "start"
-            });
-        });
-    });
+                    const target =
+                        document.querySelector(
+                            targetId
+                        );
 
+
+                    if (!target) {
+                        return;
+                    }
+
+
+                    event.preventDefault();
+
+                    closeMobileMenu();
+
+
+                    target.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start"
+                    });
+                }
+            );
+        }
+    );
+
+
+    /*
+     * Active navigation ketika
+     * section sedang terlihat.
+     */
 
     const sections =
-        document.querySelectorAll(".page-section");
+        document.querySelectorAll(
+            ".page-section[id]"
+        );
 
 
     const observer =
         new IntersectionObserver(
             (entries) => {
 
-                entries.forEach((entry) => {
+                entries.forEach(
+                    (entry) => {
 
-                    if (!entry.isIntersecting) {
-                        return;
+                        if (
+                            !entry.isIntersecting
+                        ) {
+                            return;
+                        }
+
+
+                        updateActiveNavigation(
+                            entry.target.id
+                        );
                     }
-
-                    updateActiveNavigation(
-                        entry.target.id
-                    );
-                });
+                );
 
             },
             {
                 threshold: 0.25,
-                rootMargin: "-10% 0px -55% 0px"
+                rootMargin:
+                    "-10% 0px -55% 0px"
             }
         );
 
 
-    sections.forEach((section) => {
-        observer.observe(section);
-    });
+    sections.forEach(
+        (section) => {
+            observer.observe(
+                section
+            );
+        }
+    );
 }
 
 
-function updateActiveNavigation(sectionId) {
+function updateActiveNavigation(
+    sectionId
+) {
+
     document
         .querySelectorAll("[data-page]")
-        .forEach((link) => {
+        .forEach(
+            (link) => {
 
-            const page =
-                link.getAttribute("data-page");
+                const page =
+                    link.getAttribute(
+                        "data-page"
+                    );
 
-            link.classList.toggle(
-                "active",
-                page === sectionId
-            );
-        });
+
+                link.classList.toggle(
+                    "active",
+                    page === sectionId
+                );
+            }
+        );
 }
 
 
@@ -327,26 +493,33 @@ function updateActiveNavigation(sectionId) {
 ========================================================= */
 
 function setupMobileMenu() {
+
     if (!mobileMenuButton) {
         return;
     }
+
 
     mobileMenuButton.addEventListener(
         "click",
         () => {
 
             const isOpen =
-                mobileMenu?.classList.toggle("open");
+                mobileMenu?.classList.toggle(
+                    "open"
+                );
+
 
             mobileMenuButton.classList.toggle(
                 "open",
-                isOpen
+                Boolean(isOpen)
             );
+
 
             mobileMenuButton.setAttribute(
                 "aria-expanded",
                 String(Boolean(isOpen))
             );
+
 
             document.body.classList.toggle(
                 "menu-open",
@@ -356,31 +529,52 @@ function setupMobileMenu() {
     );
 
 
-    mobileNavLinks.forEach((link) => {
-        link.addEventListener(
-            "click",
-            closeMobileMenu
-        );
-    });
+    mobileNavLinks.forEach(
+        (link) => {
 
+            link.addEventListener(
+                "click",
+                closeMobileMenu
+            );
+        }
+    );
+
+
+    /*
+     * Klik di luar mobile menu
+     * akan menutup menu.
+     */
 
     document.addEventListener(
         "click",
         (event) => {
 
             if (
-                !mobileMenu?.classList.contains("open")
+                !mobileMenu?.classList.contains(
+                    "open"
+                )
             ) {
                 return;
             }
 
-            const insideMenu =
-                mobileMenu.contains(event.target);
 
-            const insideButton =
-                mobileMenuButton.contains(event.target);
+            const clickedInsideMenu =
+                mobileMenu.contains(
+                    event.target
+                );
 
-            if (!insideMenu && !insideButton) {
+
+            const clickedButton =
+                mobileMenuButton.contains(
+                    event.target
+                );
+
+
+            if (
+                !clickedInsideMenu &&
+                !clickedButton
+            ) {
+
                 closeMobileMenu();
             }
         }
@@ -389,14 +583,22 @@ function setupMobileMenu() {
 
 
 function closeMobileMenu() {
-    mobileMenu?.classList.remove("open");
 
-    mobileMenuButton?.classList.remove("open");
+    mobileMenu?.classList.remove(
+        "open"
+    );
+
+
+    mobileMenuButton?.classList.remove(
+        "open"
+    );
+
 
     mobileMenuButton?.setAttribute(
         "aria-expanded",
         "false"
     );
+
 
     document.body.classList.remove(
         "menu-open"
@@ -409,19 +611,25 @@ function closeMobileMenu() {
 ========================================================= */
 
 function setupNavbarScroll() {
+
     const handleScroll = () => {
+
         navbar?.classList.toggle(
             "scrolled",
             window.scrollY > 35
         );
     };
 
+
     handleScroll();
+
 
     window.addEventListener(
         "scroll",
         handleScroll,
-        { passive: true }
+        {
+            passive: true
+        }
     );
 }
 
@@ -431,26 +639,43 @@ function setupNavbarScroll() {
 ========================================================= */
 
 function setupCharacterCounter() {
-    if (!letterInput || !characterCount) {
+
+    if (
+        !letterInput ||
+        !characterCount
+    ) {
         return;
     }
 
-    const updateCounter = () => {
+
+    function updateCounter() {
 
         const length =
             letterInput.value.length;
+
 
         characterCount.textContent =
             length;
 
 
-        if (length >= MAX_LENGTH * 0.9) {
+        /*
+         * Peringatan visual saat
+         * mendekati batas maksimal.
+         */
+
+        if (
+            length >= MAX_LENGTH * 0.9
+        ) {
+
             characterCount.style.color =
                 "var(--burgundy)";
+
         } else {
-            characterCount.style.color = "";
+
+            characterCount.style.color =
+                "";
         }
-    };
+    }
 
 
     letterInput.addEventListener(
@@ -458,108 +683,246 @@ function setupCharacterCounter() {
         updateCounter
     );
 
+
     updateCounter();
 }
 
 
 /* =========================================================
-   WRITE CONFESSION
+   CONFESSION FORM
 ========================================================= */
 
 function setupConfessionForm() {
+
     if (!confessionForm) {
         return;
     }
 
+
     confessionForm.addEventListener(
         "submit",
-        (event) => {
+        async (event) => {
 
             event.preventDefault();
 
-            submitConfession();
+            await submitConfession();
         }
     );
 }
 
 
-function submitConfession() {
+async function submitConfession() {
+
+    /*
+     * Ambil isi textarea.
+     */
+
     const content =
         letterInput.value.trim();
 
 
+    /*
+     * Validasi kosong.
+     */
+
     if (!content) {
+
         showFormError();
+
         return;
     }
 
 
-    if (content.length > MAX_LENGTH) {
+    /*
+     * Validasi panjang.
+     */
+
+    if (
+        content.length > MAX_LENGTH
+    ) {
+
         showFormError();
+
         return;
     }
 
 
-    const newConfession = {
-        id: generateConfessionId(),
-        content,
-        createdAt: new Date().toISOString()
-    };
+    /*
+     * Tombol submit.
+     */
+
+    const submitButton =
+        confessionForm.querySelector(
+            ".seal-button"
+        );
 
 
-    const saved =
-        saveConfession(newConfession);
+    setSubmitButtonLoading(
+        submitButton,
+        true
+    );
 
 
-    if (!saved) {
+    /*
+     * Kirim langsung ke database.
+     */
+
+    const newConfession =
+        await saveConfession(
+            content
+        );
+
+
+    setSubmitButtonLoading(
+        submitButton,
+        false
+    );
+
+
+    /*
+     * Kalau database gagal.
+     */
+
+    if (!newConfession) {
+
         alert(
-            "Confess belum dapat disimpan. Coba lagi."
+            "Confess belum berhasil dititipkan. Periksa koneksi atau konfigurasi Supabase, lalu coba lagi."
         );
 
         return;
     }
 
 
-    confessions.push(newConfession);
+    /*
+     * Tambahkan ke state saat ini.
+     *
+     * Ini BUKAN localStorage.
+     * Data permanennya tetap berada
+     * di Supabase.
+     */
+
+    confessions.unshift(
+        newConfession
+    );
+
 
     currentConfession =
         newConfession;
 
 
+    /*
+     * Tampilkan isi confess
+     * di envelope.
+     */
+
     if (sealedPreview) {
+
         sealedPreview.textContent =
             content;
     }
 
 
+    /*
+     * Buka overlay.
+     */
+
     openSealOverlay();
 
 
-    setTimeout(() => {
+    /*
+     * Jalankan animasi envelope.
+     */
 
-        envelope?.classList.add("open");
+    setTimeout(
+        () => {
 
-        setTimeout(() => {
-            envelope?.classList.add("delivered");
-        }, 650);
+            envelope?.classList.add(
+                "open"
+            );
 
-    }, 180);
+
+            setTimeout(
+                () => {
+
+                    envelope?.classList.add(
+                        "delivered"
+                    );
+
+                },
+                650
+            );
+
+        },
+        180
+    );
 
 
     /*
-     * Setelah confess pertama dibuat,
-     * langsung perbarui bagian "Confess Malam Ini".
+     * Perbarui bagian home.
      */
+
     showTonightConfession();
 }
 
 
+function setSubmitButtonLoading(
+    button,
+    loading
+) {
+
+    if (!button) {
+        return;
+    }
+
+
+    button.disabled =
+        loading;
+
+
+    if (loading) {
+
+        button.dataset.originalText =
+            button.innerHTML;
+
+
+        button.innerHTML =
+            `
+                <span class="seal-button-icon">⋯</span>
+                <span>Menitipkan...</span>
+            `;
+
+    } else {
+
+        button.innerHTML =
+            button.dataset.originalText ||
+            `
+                <span class="seal-button-icon">✦</span>
+                <span>Titipkan Confess</span>
+                <span class="seal-button-arrow">→</span>
+            `;
+    }
+}
+
+
 function showFormError() {
-    confessionForm?.classList.remove("shake");
+
+    confessionForm?.classList.remove(
+        "shake"
+    );
+
+
+    /*
+     * Memaksa reflow supaya animasi
+     * bisa dimainkan berulang kali.
+     */
 
     void confessionForm?.offsetWidth;
 
-    confessionForm?.classList.add("shake");
+
+    confessionForm?.classList.add(
+        "shake"
+    );
+
 
     letterInput?.focus();
 }
@@ -571,11 +934,19 @@ function showFormError() {
 
 function setupSealOverlay() {
 
+    /*
+     * Tombol X.
+     */
+
     closeSealOverlay?.addEventListener(
         "click",
         closeSealOverlayAndReset
     );
 
+
+    /*
+     * Kembali ke beranda.
+     */
 
     keepLetterButton?.addEventListener(
         "click",
@@ -583,10 +954,17 @@ function setupSealOverlay() {
 
             closeSealOverlayAndReset();
 
-            scrollToSection("home");
+            scrollToSection(
+                "home"
+            );
         }
     );
 
+
+    /*
+     * Langsung ke confess yang baru
+     * saja dikirim.
+     */
 
     readAfterSealButton?.addEventListener(
         "click",
@@ -594,14 +972,37 @@ function setupSealOverlay() {
 
             closeSealOverlayAndReset();
 
-            scrollToSection("read");
+            scrollToSection(
+                "read"
+            );
 
-            setTimeout(() => {
-                showRandomConfession();
-            }, 450);
+
+            setTimeout(
+                () => {
+
+                    if (
+                        currentConfession
+                    ) {
+
+                        updateReadingUI(
+                            currentConfession
+                        );
+
+                    } else {
+
+                        showRandomConfession();
+                    }
+
+                },
+                450
+            );
         }
     );
 
+
+    /*
+     * Klik backdrop untuk menutup.
+     */
 
     sealOverlay?.addEventListener(
         "click",
@@ -612,7 +1013,12 @@ function setupSealOverlay() {
                     ".overlay-backdrop"
                 );
 
-            if (event.target === backdrop) {
+
+            if (
+                event.target ===
+                backdrop
+            ) {
+
                 closeSealOverlayAndReset();
             }
         }
@@ -621,18 +1027,26 @@ function setupSealOverlay() {
 
 
 function openSealOverlay() {
+
     if (!sealOverlay) {
         return;
     }
 
-    sealOverlay.classList.add("active");
+
+    sealOverlay.classList.add(
+        "active"
+    );
+
 
     sealOverlay.setAttribute(
         "aria-hidden",
         "false"
     );
 
-    document.body.classList.add("menu-open");
+
+    document.body.classList.add(
+        "menu-open"
+    );
 }
 
 
@@ -642,17 +1056,26 @@ function closeSealOverlayAndReset() {
         return;
     }
 
-    sealOverlay.classList.remove("active");
+
+    sealOverlay.classList.remove(
+        "active"
+    );
+
 
     sealOverlay.setAttribute(
         "aria-hidden",
         "true"
     );
 
+
     document.body.classList.remove(
         "menu-open"
     );
 
+
+    /*
+     * Reset envelope.
+     */
 
     envelope?.classList.remove(
         "open",
@@ -660,21 +1083,35 @@ function closeSealOverlayAndReset() {
     );
 
 
-    setTimeout(() => {
+    /*
+     * Reset form.
+     *
+     * currentConfession sengaja tidak
+     * dihapus agar tombol "Baca
+     * confess lain" tetap bisa
+     * menampilkan confess terakhir.
+     */
 
-        confessionForm?.reset();
+    setTimeout(
+        () => {
 
-        if (characterCount) {
-            characterCount.textContent = "0";
-        }
+            confessionForm?.reset();
 
-        if (sealedPreview) {
-            sealedPreview.textContent = "";
-        }
 
-        currentConfession = null;
+            if (characterCount) {
+                characterCount.textContent =
+                    "0";
+            }
 
-    }, 350);
+
+            if (sealedPreview) {
+                sealedPreview.textContent =
+                    "";
+            }
+
+        },
+        350
+    );
 }
 
 
@@ -688,11 +1125,19 @@ function setupTonightConfession() {
         "click",
         () => {
 
-            scrollToSection("read");
+            scrollToSection(
+                "read"
+            );
 
-            setTimeout(() => {
-                showRandomConfession();
-            }, 450);
+
+            setTimeout(
+                () => {
+
+                    showRandomConfession();
+
+                },
+                450
+            );
         }
     );
 }
@@ -704,6 +1149,10 @@ function showTonightConfession() {
         return;
     }
 
+
+    /*
+     * Database masih kosong.
+     */
 
     if (!confessions.length) {
 
@@ -720,6 +1169,10 @@ function showTonightConfession() {
     }
 
 
+    /*
+     * Ambil salah satu confess.
+     */
+
     const confession =
         getRandomConfession();
 
@@ -732,14 +1185,16 @@ function showTonightConfession() {
     tonightLetter.textContent =
         confession.content;
 
+
     tonightNumber.textContent =
         formatConfessionNumber(
             confession
         );
 
+
     tonightDate.textContent =
         formatRelativeDate(
-            confession.createdAt
+            confession.created_at
         );
 
 
@@ -760,9 +1215,12 @@ function setupReading() {
         () => {
 
             if (!confessions.length) {
+
                 showEmptyReadingState();
+
                 return;
             }
+
 
             showRandomConfession();
         }
@@ -777,11 +1235,21 @@ function showRandomConfession() {
     }
 
 
+    /*
+     * Database kosong.
+     */
+
     if (!confessions.length) {
+
         showEmptyReadingState();
+
         return;
     }
 
+
+    /*
+     * Pilih confess random.
+     */
 
     const nextConfession =
         getRandomConfession(
@@ -790,7 +1258,9 @@ function showRandomConfession() {
 
 
     if (!nextConfession) {
+
         showEmptyReadingState();
+
         return;
     }
 
@@ -813,9 +1283,11 @@ function showEmptyReadingState() {
     readingNumber.textContent =
         "—";
 
+
     readingContent.classList.remove(
         "fade-out-content"
     );
+
 
     readingContent.classList.add(
         "fade-in-content"
@@ -823,13 +1295,19 @@ function showEmptyReadingState() {
 }
 
 
-function updateReadingUI(confession) {
+function updateReadingUI(
+    confession
+) {
 
     if (!readingContent) {
         return;
     }
 
 
+    /*
+     * Fade out.
+     */
+
     readingContent.classList.remove(
         "fade-in-content"
     );
@@ -839,34 +1317,47 @@ function updateReadingUI(confession) {
     );
 
 
-    setTimeout(() => {
+    setTimeout(
+        () => {
 
-        readingContent.textContent =
-            confession.content;
+            /*
+             * Tampilkan confess baru.
+             */
+
+            readingContent.textContent =
+                confession.content;
 
 
-        readingNumber.textContent =
-            formatConfessionNumber(
-                confession
+            readingNumber.textContent =
+                formatConfessionNumber(
+                    confession
+                );
+
+
+            /*
+             * Fade in.
+             */
+
+            readingContent.classList.remove(
+                "fade-out-content"
             );
 
 
-        readingContent.classList.remove(
-            "fade-out-content"
-        );
+            void readingContent.offsetWidth;
 
-        void readingContent.offsetWidth;
 
-        readingContent.classList.add(
-            "fade-in-content"
-        );
+            readingContent.classList.add(
+                "fade-in-content"
+            );
 
-    }, 180);
+        },
+        180
+    );
 }
 
 
 /* =========================================================
-   RANDOM
+   RANDOM CONFESSION
 ========================================================= */
 
 function getRandomConfession(
@@ -878,15 +1369,29 @@ function getRandomConfession(
     }
 
 
+    /*
+     * Hindari menampilkan confess
+     * yang sama dua kali berturut-turut
+     * kalau masih ada pilihan lain.
+     */
+
     let available =
         confessions.filter(
             (confession) =>
-                confession.id !== excludeId
+                confession.id !==
+                excludeId
         );
 
 
+    /*
+     * Kalau hanya ada satu confess,
+     * tetap gunakan confess tersebut.
+     */
+
     if (!available.length) {
-        available = confessions;
+
+        available =
+            confessions;
     }
 
 
@@ -897,22 +1402,33 @@ function getRandomConfession(
         );
 
 
-    return available[randomIndex];
+    return available[
+        randomIndex
+    ];
 }
 
 
 /* =========================================================
-   NUMBER
+   CONFESSION NUMBER
 ========================================================= */
 
 function formatConfessionNumber(
     confession
 ) {
 
+    /*
+     * State kita berisi data terbaru
+     * di posisi paling awal.
+     *
+     * Nomor di sini hanya identifier
+     * visual, bukan ID database.
+     */
+
     const index =
         confessions.findIndex(
             (item) =>
-                item.id === confession.id
+                item.id ===
+                confession.id
         );
 
 
@@ -921,15 +1437,19 @@ function formatConfessionNumber(
     }
 
 
-    return `#${String(index + 1).padStart(3, "0")}`;
+    return `#${String(
+        index + 1
+    ).padStart(3, "0")}`;
 }
 
 
 /* =========================================================
-   DATE
+   DATE FORMAT
 ========================================================= */
 
-function formatRelativeDate(dateString) {
+function formatRelativeDate(
+    dateString
+) {
 
     if (!dateString) {
         return "anonymous";
@@ -940,7 +1460,12 @@ function formatRelativeDate(dateString) {
         new Date(dateString);
 
 
-    if (Number.isNaN(date.getTime())) {
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
         return "anonymous";
     }
 
@@ -963,7 +1488,11 @@ function formatRelativeDate(dateString) {
     }
 
 
-    if (difference < oneDay * 2) {
+    if (
+        difference <
+        oneDay * 2
+    ) {
+
         return "kemarin";
     }
 
@@ -980,10 +1509,12 @@ function formatRelativeDate(dateString) {
 
 
 /* =========================================================
-   ANIMATION
+   LETTER ANIMATION
 ========================================================= */
 
-function animateLetterChange(element) {
+function animateLetterChange(
+    element
+) {
 
     if (!element) {
         return;
@@ -1005,13 +1536,17 @@ function animateLetterChange(element) {
 
 
 /* =========================================================
-   SCROLL
+   SCROLL HELPER
 ========================================================= */
 
-function scrollToSection(sectionId) {
+function scrollToSection(
+    sectionId
+) {
 
     const section =
-        document.getElementById(sectionId);
+        document.getElementById(
+            sectionId
+        );
 
 
     if (!section) {
@@ -1043,6 +1578,12 @@ function setupRevealAnimations() {
     }
 
 
+    /*
+     * Pengguna yang memilih
+     * reduced motion tidak perlu
+     * menjalankan animasi.
+     */
+
     if (
         window.matchMedia &&
         window.matchMedia(
@@ -1052,7 +1593,10 @@ function setupRevealAnimations() {
 
         elements.forEach(
             (element) => {
-                element.classList.add("revealed");
+
+                element.classList.add(
+                    "revealed"
+                );
             }
         );
 
@@ -1062,18 +1606,25 @@ function setupRevealAnimations() {
 
     const observer =
         new IntersectionObserver(
-            (entries, observerInstance) => {
+            (
+                entries,
+                observerInstance
+            ) => {
 
                 entries.forEach(
                     (entry) => {
 
-                        if (!entry.isIntersecting) {
+                        if (
+                            !entry.isIntersecting
+                        ) {
                             return;
                         }
+
 
                         entry.target.classList.add(
                             "revealed"
                         );
+
 
                         observerInstance.unobserve(
                             entry.target
@@ -1092,14 +1643,17 @@ function setupRevealAnimations() {
 
     elements.forEach(
         (element) => {
-            observer.observe(element);
+
+            observer.observe(
+                element
+            );
         }
     );
 }
 
 
 /* =========================================================
-   KEYBOARD
+   KEYBOARD SHORTCUTS
 ========================================================= */
 
 function setupKeyboardShortcuts() {
@@ -1108,27 +1662,39 @@ function setupKeyboardShortcuts() {
         "keydown",
         (event) => {
 
-            /* Escape */
+            /*
+             * Escape
+             */
 
-            if (event.key === "Escape") {
+            if (
+                event.key ===
+                "Escape"
+            ) {
 
                 if (
                     sealOverlay?.classList.contains(
                         "active"
                     )
                 ) {
+
                     closeSealOverlayAndReset();
                 }
+
 
                 closeMobileMenu();
             }
 
 
-            /* Ctrl + Enter / Cmd + Enter */
+            /*
+             * Ctrl + Enter
+             * Cmd + Enter
+             */
 
             if (
-                (event.ctrlKey ||
-                    event.metaKey) &&
+                (
+                    event.ctrlKey ||
+                    event.metaKey
+                ) &&
                 event.key === "Enter"
             ) {
 
@@ -1157,36 +1723,10 @@ function setupFooterYear() {
         return;
     }
 
+
     currentYear.textContent =
         new Date().getFullYear();
 }
-
-
-/* =========================================================
-   MULTI-TAB UPDATE
-========================================================= */
-
-window.addEventListener(
-    "storage",
-    (event) => {
-
-        if (
-            event.key !== STORAGE_KEY
-        ) {
-            return;
-        }
-
-
-        loadConfessions();
-
-        showTonightConfession();
-
-        /*
-         * Tidak mengganti confess yang sedang
-         * dibaca secara tiba-tiba.
-         */
-    }
-);
 
 
 /* =========================================================
@@ -1196,7 +1736,9 @@ window.addEventListener(
 function setupPaperInteraction() {
 
     const formPaper =
-        document.querySelector(".form-paper");
+        document.querySelector(
+            ".form-paper"
+        );
 
 
     if (!formPaper) {
@@ -1204,11 +1746,17 @@ function setupPaperInteraction() {
     }
 
 
+    /*
+     * Sedikit efek 3D pada desktop.
+     */
+
     formPaper.addEventListener(
         "mousemove",
         (event) => {
 
-            if (window.innerWidth <= 900) {
+            if (
+                window.innerWidth <= 900
+            ) {
                 return;
             }
 
@@ -1228,11 +1776,17 @@ function setupPaperInteraction() {
 
 
             const rotateY =
-                ((x / rect.width) - 0.5) * 1.4;
+                (
+                    (x / rect.width) -
+                    0.5
+                ) * 1.4;
 
 
             const rotateX =
-                ((y / rect.height) - 0.5) * -1.4;
+                (
+                    (y / rect.height) -
+                    0.5
+                ) * -1.4;
 
 
             formPaper.style.transform =
@@ -1247,7 +1801,9 @@ function setupPaperInteraction() {
     formPaper.addEventListener(
         "mouseleave",
         () => {
-            formPaper.style.transform = "";
+
+            formPaper.style.transform =
+                "";
         }
     );
 }
