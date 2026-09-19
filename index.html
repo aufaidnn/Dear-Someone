@@ -140,12 +140,20 @@
 
                 <div class="hero-actions reveal-element">
 
-                    <a href="#write" class="primary-button" data-page="write">
+                    <a
+                        href="#write"
+                        class="primary-button"
+                        data-page="write"
+                    >
                         <span>Tulis Confess</span>
                         <span class="button-arrow">→</span>
                     </a>
 
-                    <a href="#read" class="secondary-button" data-page="read">
+                    <a
+                        href="#read"
+                        class="secondary-button"
+                        data-page="read"
+                    >
                         Baca Confess
                     </a>
 
@@ -201,8 +209,11 @@
                             SOMEONE'S CONFESSION
                         </span>
 
-                        <span class="card-number" id="tonightNumber">
-                            #000
+                        <span
+                            class="card-number"
+                            id="tonightNumber"
+                        >
+                            —
                         </span>
 
                     </div>
@@ -216,8 +227,8 @@
                             class="tonight-letter"
                             id="tonightLetter"
                         >
-                            Aku tidak tahu apakah kamu masih mengingatku.
-                            Tapi anehnya, aku masih mengingat hampir semuanya.
+                            Belum ada confess malam ini.
+                            Mungkin kamu bisa menjadi yang pertama.
                         </p>
 
                     </div>
@@ -233,7 +244,7 @@
                             class="letter-date"
                             id="tonightDate"
                         >
-                            malam ini
+                            waiting for someone
                         </span>
 
                     </div>
@@ -303,7 +314,7 @@
                             </div>
 
                             <div class="private-stamp">
-                                PRIVATE
+                                ANONYMOUS
                             </div>
 
                         </div>
@@ -333,7 +344,10 @@
 
                         <div class="writing-footer">
 
-                            <div class="character-counter" aria-live="polite">
+                            <div
+                                class="character-counter"
+                                aria-live="polite"
+                            >
                                 <span id="characterCount">0</span>
                                 <span>/ 1000</span>
                             </div>
@@ -348,7 +362,6 @@
                         <button
                             type="submit"
                             class="seal-button"
-                            id="sealButton"
                         >
                             <span class="seal-button-icon">✦</span>
                             <span>Titipkan Confess</span>
@@ -365,8 +378,8 @@
                     <span class="write-note-symbol">✎</span>
 
                     <p>
-                        Confess yang kamu tulis tidak akan menampilkan
-                        nama atau identitasmu.
+                        Confess yang kamu tulis akan dibagikan
+                        secara anonim agar bisa dibaca orang lain.
                     </p>
 
                 </div>
@@ -387,7 +400,12 @@
 
             <div class="overlay-backdrop"></div>
 
-            <div class="seal-dialog">
+            <div
+                class="seal-dialog"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="sealTitle"
+            >
 
                 <button
                     class="overlay-close"
@@ -432,7 +450,7 @@
                         CONFESS DELIVERED
                     </p>
 
-                    <h3>
+                    <h3 id="sealTitle">
                         Confess-mu sudah dititipkan.
                     </h3>
 
@@ -514,13 +532,16 @@
                             class="reading-number"
                             id="readingNumber"
                         >
-                            #000
+                            —
                         </span>
 
                     </div>
 
 
-                    <article class="reading-card" id="readingCard">
+                    <article
+                        class="reading-card"
+                        id="readingCard"
+                    >
 
                         <div class="reading-paper-texture"></div>
 
@@ -530,14 +551,10 @@
                                 class="reading-content"
                                 id="readingContent"
                             >
-                                Aku pernah berharap kamu membaca
-                                sesuatu seperti ini.
+                                Belum ada confess yang bisa dibaca.
 
-                                Bukan supaya kamu kembali.
-
-                                Aku cuma ingin tahu bahwa setidaknya sekali,
-                                kamu tahu kalau aku pernah benar-benar
-                                menyayangimu.
+                                Jadilah seseorang pertama yang
+                                meninggalkan kata-kata di sini.
                             </div>
 
                         </div>
@@ -693,9 +710,13 @@
     </footer>
 
 
-    <!-- =========================
-         MAIN JAVASCRIPT
-    ========================== -->
+    <!-- ==================================================
+         SUPABASE
+    =================================================== -->
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Main JavaScript -->
     <script src="script.js"></script>
 
 </body>
